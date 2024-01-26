@@ -565,6 +565,15 @@ void rf_led_show(void) {
     }
 
     set_left_rgb(r_temp, g_temp, b_temp);
+
+    //light up corresponding BT/RF key
+    if (dev_info.link_mode >= LINK_BT_1 && dev_info.link_mode <= LINK_BT_3) {
+        rgb_matrix_set_color(30 - dev_info.link_mode, r_temp, g_temp, b_temp);
+    }
+    if (dev_info.link_mode == LINK_RF_24) {
+        rgb_matrix_set_color(26, r_temp, g_temp, b_temp);
+    }
+
 }
 
 /**
