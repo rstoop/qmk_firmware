@@ -297,17 +297,24 @@ void sleep_sw_led_show(void) {
  * @brief  sys_led_show.
  */
 void sys_led_show(void) {
-    if (dev_info.link_mode == LINK_USB) {
-        if (host_keyboard_led_state().caps_lock) {
-            set_left_rgb(0X00, 0x80, 0x80);
-        }
+
+    if (host_keyboard_led_state().caps_lock) {
+        set_left_rgb(0X00, 0x80, 0x80);
     }
 
-    else {
-        if (dev_info.rf_led & 0x02) {
-            set_left_rgb(0X00, 0x80, 0x80);
-        }
+    if (host_keyboard_led_state().num_lock) {
+        set_left_rgb(0X80, 0x80, 0x80);
     }
+
+    if (host_keyboard_led_state().num_lock && host_keyboard_led_state().caps_lock) {
+        r_temp = 0X80;
+        for (int i = 0; i < 2; i++)
+            side_rgb_set_color(i, r_temp >> 2, 0x80 >> 2, 0x80 >> 2);
+        r_temp = 0X00;
+        for (int i = 3; i < 6; i++)
+            side_rgb_set_color(i, r_temp >> 2, 0x80 >> 2, 0x80 >> 2);
+    }
+
 }
 
 /**
