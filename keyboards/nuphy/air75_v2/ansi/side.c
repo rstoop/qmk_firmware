@@ -610,19 +610,22 @@ void bat_percent_led(uint8_t bat_percent) {
     if (bat_percent <= 15) {
         bat_end_led = 0;
         bat_r = 0x80, bat_g = 0, bat_b = 0;
-    } else if (bat_percent <= 20) {
+    } else if (bat_percent <= 30) {
+        bat_end_led = 1;
+        bat_r = 0x80, bat_g = 0, bat_b = 0;
+    } else if (bat_percent <= 40) {
         bat_end_led = 1;
         bat_r = 0x80, bat_g = 0x40, bat_b = 0;
-    } else if (bat_percent <= 40) {
+    } else if (bat_percent <= 60) {
         bat_end_led = 2;
         bat_r = 0x80, bat_g = 0x40, bat_b = 0;
-    } else if (bat_percent <= 60) {
+    } else if (bat_percent <= 70) {
         bat_end_led = 3;
         bat_r = 0x80, bat_g = 0x40, bat_b = 0;
     } else if (bat_percent <= 80) {
         bat_end_led = 4;
         bat_r = 0x80, bat_g = 0x40, bat_b = 0;
-    } else if (bat_percent <= 95) {
+    } else if (bat_percent <= 90) {
         bat_end_led = 5;
         bat_r = 0x80, bat_g = 0x40, bat_b = 0;
     } else {
