@@ -84,6 +84,9 @@ extern uint16_t        rf_link_show_time;
 extern bool            f_bat_hold;
 extern bool            f_sys_show;
 extern bool            f_sleep_show;
+extern uint16_t        link_timeout;
+extern uint16_t        link_timeout_rf24;
+extern uint16_t        sleep_time_delay;
 
 void side_ws2812_setleds(rgb_led_t *ledarray, uint16_t leds);
 void rgb_matrix_update_pwm_buffers(void);
@@ -274,9 +277,15 @@ void sleep_sw_led_show(void) {
 
     if (sleep_show_flag) {
         if (user_config.sleep_enable) {
-            r_temp = 0x00;
-            g_temp = 0x80;
-            b_temp = 0x00;
+            if (sleep_time_delay == (100 * 60)) {
+                r_temp = 0x00;
+                g_temp = 0x80;
+                b_temp = 0x00;
+            } else {
+                r_temp = 0x80;
+                g_temp = 0x40;
+                b_temp = 0x00;
+            }
         } else {
             r_temp = 0x80;
             g_temp = 0x00;

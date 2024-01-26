@@ -31,6 +31,9 @@ extern uint16_t  rf_sw_press_delay;
 extern uint16_t  rf_linking_time;
 extern user_config_t user_config;
 extern DEV_INFO_STRUCT dev_info;
+extern uint16_t  link_timeout;
+extern uint16_t  link_timeout_rf24;
+extern uint16_t  sleep_time_delay;
 
 
 /* qmk process record */
@@ -197,8 +200,20 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case SLEEP_MODE:
             if (record->event.pressed) {
-                if(user_config.sleep_enable) user_config.sleep_enable = false;
-                else user_config.sleep_enable = true;
+                if(user_config.sleep_enable) {
+                    if (sleep_time_delay == (100 * 60) ) {
+                        link_timeout = (100 * 120);
+                        link_timeout_rf24 = (100 * 120);
+                        sleep_time_delay = (100 * 360);
+                    } else {
+                        user_config.sleep_enable = false;
+                    }
+                } else {
+                    link_timeout = (100 * 60);
+                    link_timeout_rf24 = (100 * 10);
+                    sleep_time_delay = (100 * 60);
+                    user_config.sleep_enable = true;
+                }
                 f_sleep_show       = 1;
                 eeconfig_update_user_datablock(&user_config);
             }

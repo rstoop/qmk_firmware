@@ -47,6 +47,10 @@ uint16_t       rf_sw_press_delay     = 0;
 uint16_t       rgb_test_press_delay  = 0;
 host_driver_t *m_host_driver         = 0;
 
+uint16_t       link_timeout = (100 * 60);
+uint16_t       link_timeout_rf24 = (100 * 10);
+uint16_t       sleep_time_delay = (100 * 60);
+
 extern bool               f_rf_new_adv_ok;
 extern report_keyboard_t *keyboard_report;
 extern report_nkro_t *nkro_report;

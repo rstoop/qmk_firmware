@@ -26,6 +26,9 @@ extern uint16_t        rf_linking_time;
 extern uint16_t        no_act_time;
 extern bool            f_goto_sleep;
 extern bool            f_wakeup_prepare;
+extern uint16_t        link_timeout;
+extern uint16_t        link_timeout_rf24;
+extern uint16_t        sleep_time_delay;
 
 uint8_t uart_send_cmd(uint8_t cmd, uint8_t ack_cnt, uint8_t delayms);
 
@@ -95,10 +98,10 @@ void sleep_handle(void) {
         }
     } else if (dev_info.rf_state == RF_CONNECT) {
         rf_disconnect_time = 0;
-        if (no_act_time >= SLEEP_TIME_DELAY) {
+        if (no_act_time >= sleep_time_delay) {
             f_goto_sleep = 1;
         }
-    } else if (rf_linking_time >= LINK_TIMEOUT) {
+    } else if ( (dev_info.link_mode == LINK_RF_24 && rf_linking_time >= link_timeout_rf24) || rf_linking_time >= link_timeout) {
         rf_linking_time = 0;
         f_goto_sleep    = 1;
     } else if (dev_info.rf_state == RF_DISCONNECT) {
