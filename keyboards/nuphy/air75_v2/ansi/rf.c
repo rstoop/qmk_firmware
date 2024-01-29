@@ -139,11 +139,12 @@ void uart_send_report_repeat(void)
     if (dev_info.link_mode == LINK_USB) return;
     keyboard_protocol          = 1;
 
-    if (timer_elapsed32(interval_timer) > 40) {
+    if (timer_elapsed32(interval_timer) > 20) {
         interval_timer = timer_read32();
-        if (no_act_time <= 200) {
+        if (no_act_time <= 120) {
+            wait_us(100);
             uart_send_report(CMD_RPT_BYTE_KB, bytekb_report_buf, 8);
-            wait_us(200);
+            wait_us(100);
 
             if(f_bit_kb_act)
             uart_send_report(CMD_RPT_BIT_KB, uart_bit_report_buf, 16);
