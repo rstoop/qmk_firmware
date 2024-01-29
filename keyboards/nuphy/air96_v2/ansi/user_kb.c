@@ -66,29 +66,22 @@ extern uint8_t            side_colour;
  * @brief  gpio initial.
  */
 void gpio_init(void) {
-    /* enable led power driver  */
-    setPinOutput(DRIVER_LED_CS_PIN);
-    setPinOutput(DRIVER_SIDE_CS_PIN);
-    writePinLow(DRIVER_LED_CS_PIN);
-    writePinLow(DRIVER_SIDE_CS_PIN);
-    /* set side led pin output low */
-    setPinOutput(DRIVER_SIDE_PIN);
-    writePinLow(DRIVER_SIDE_PIN);
-    /* config RF module pin */
+    setPinOutput(DC_BOOST_PIN); writePinHigh(DC_BOOST_PIN);
+
+    setPinOutput(RGB_DRIVER_SDB1); writePinHigh(RGB_DRIVER_SDB1);
+    setPinOutput(RGB_DRIVER_SDB2); writePinHigh(RGB_DRIVER_SDB2);
+
     setPinOutput(NRF_WAKEUP_PIN);
     writePinHigh(NRF_WAKEUP_PIN);
-    setPinInputHigh(NRF_TEST_PIN);
-    /* reset RF module */
-    setPinOutput(NRF_RESET_PIN);
-    writePinLow(NRF_RESET_PIN);
+
+    setPinInputHigh(NRF_BOOT_PIN);
+
+    setPinOutput(NRF_RESET_PIN); writePinLow(NRF_RESET_PIN);
     wait_ms(50);
     writePinHigh(NRF_RESET_PIN);
-    /* config dial switch pin */
+
     setPinInputHigh(DEV_MODE_PIN);
     setPinInputHigh(SYS_MODE_PIN);
-    /* open led DC driver */
-    setPinOutput(DC_BOOST_PIN);
-    writePinHigh(DC_BOOST_PIN);
 }
 
 /**

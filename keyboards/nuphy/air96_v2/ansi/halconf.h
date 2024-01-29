@@ -17,7 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include_next <mcuconf.h>
+#include_next <halconf.h>
 
-#undef STM32_SERIAL_USE_USART1
-#define STM32_SERIAL_USE_USART1 TRUE
+#undef HAL_USE_SERIAL
+#define HAL_USE_SERIAL TRUE
+
+#undef HAL_USE_I2C
+#define HAL_USE_I2C TRUE
+

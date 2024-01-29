@@ -389,8 +389,8 @@ uint8_t uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms) {
             Usart_Mgr.TXDBuf[12] = 'A';
             Usart_Mgr.TXDBuf[13] = 'i';
             Usart_Mgr.TXDBuf[14] = 'r';
-            Usart_Mgr.TXDBuf[15] = '7';
-            Usart_Mgr.TXDBuf[16] = '5';
+            Usart_Mgr.TXDBuf[15] = '9';
+            Usart_Mgr.TXDBuf[16] = '6';
             Usart_Mgr.TXDBuf[17] = ' ';
             Usart_Mgr.TXDBuf[18] = 'V';
             Usart_Mgr.TXDBuf[19] = '2';

@@ -58,8 +58,9 @@ void sleep_handle(void) {
             setPinOutput(DC_BOOST_PIN);
             writePinLow(DC_BOOST_PIN);
 
-            setPinInput(DRIVER_LED_CS_PIN);
-            setPinInput(DRIVER_SIDE_CS_PIN);
+            writePinLow(RGB_DRIVER_SDB1);
+            writePinLow(RGB_DRIVER_SDB2);
+
         }
 
         f_wakeup_prepare = 1;
@@ -70,11 +71,9 @@ void sleep_handle(void) {
         f_wakeup_prepare = 0;
 
         writePinHigh(DC_BOOST_PIN);
+        writePinHigh(RGB_DRIVER_SDB1);
+        writePinHigh(RGB_DRIVER_SDB2);
 
-        setPinOutput(DRIVER_LED_CS_PIN);
-        writePinLow(DRIVER_LED_CS_PIN);
-        setPinOutput(DRIVER_SIDE_CS_PIN);
-        writePinLow(DRIVER_SIDE_CS_PIN);
 
         uart_send_cmd(CMD_HAND, 0, 1);
 
