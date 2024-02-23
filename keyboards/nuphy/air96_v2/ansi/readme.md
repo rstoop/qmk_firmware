@@ -19,6 +19,12 @@ See the [build environment setup](https://docs.qmk.fm/#/getting_started_build_to
 
 ## Bootloader
 
-Enter the bootloader in one way:
+Enter the bootloader:
 
 * **Bootmagic reset**: Hold down the key at (0,0) in the matrix (usually the top left key or Escape) and plug in the keyboard
+
+* **Hardware reset**: Remove the capslock keycap, hold the little button beneath and plug in the keyboard.
+
+## Customizations and Fixes
+
+* [customizations.md](customizations.md)

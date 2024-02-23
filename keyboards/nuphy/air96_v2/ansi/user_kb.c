@@ -18,11 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "user_kb.h"
 #include "ansi.h"
 #include "usb_main.h"
-#include "rf_driver.h"
+#include "mcu_pwr.h"
+#include "color.h"
 
-user_config_t user_config;
+user_config_t   user_config;
 DEV_INFO_STRUCT dev_info = {
-    .rf_baterry = 100,
+    .rf_battery = 100,
     .link_mode  = LINK_USB,
     .rf_state   = RF_IDLE,
 };
@@ -41,45 +42,51 @@ uint8_t        rf_sw_temp            = 0;
 uint8_t        host_mode             = 0;
 uint16_t       rf_linking_time       = 0;
 uint16_t       rf_link_show_time     = 0;
-uint16_t       no_act_time           = 0;
+uint32_t       no_act_time           = 0;
 uint16_t       dev_reset_press_delay = 0;
 uint16_t       rf_sw_press_delay     = 0;
 uint16_t       rgb_test_press_delay  = 0;
+uint16_t       rgb_led_last_act      = 0;
+
 host_driver_t *m_host_driver         = 0;
 
-uint16_t       link_timeout = (100 * 60);
+uint16_t       link_timeout = (50 + 100 * 59);
 uint16_t       link_timeout_rf24 = (100 * 10);
-uint16_t       sleep_time_delay = (100 * 60);
+uint16_t       sleep_time_delay = (100 * 60 * 2);
+uint32_t       deep_sleep_delay = (100 * 60 * 6);
+uint32_t       eeprom_update_timer   = 0;
+bool           side_update           = 0;
+bool           rgb_update            = 0;
 
 extern bool               f_rf_new_adv_ok;
+extern bool               f_wakeup_prepare;
 extern report_keyboard_t *keyboard_report;
-extern report_nkro_t *nkro_report;
-extern uint8_t            bitkb_report_buf[32];
-extern uint8_t            bytekb_report_buf[8];
+extern report_nkro_t     *nkro_report;
+extern host_driver_t      rf_host_driver;
 extern uint8_t            side_mode;
 extern uint8_t            side_light;
 extern uint8_t            side_speed;
 extern uint8_t            side_rgb;
 extern uint8_t            side_colour;
+extern uint8_t            side_one;
 
 /**
  * @brief  gpio initial.
  */
 void gpio_init(void) {
-    setPinOutput(DC_BOOST_PIN); writePinHigh(DC_BOOST_PIN);
-
-    setPinOutput(RGB_DRIVER_SDB1); writePinHigh(RGB_DRIVER_SDB1);
-    setPinOutput(RGB_DRIVER_SDB2); writePinHigh(RGB_DRIVER_SDB2);
-
+    /* power on all LEDs */
+    pwr_led_on();
+    /* config RF module pin */
     setPinOutput(NRF_WAKEUP_PIN);
     writePinHigh(NRF_WAKEUP_PIN);
-
+    /* set RF module boot pin high */
     setPinInputHigh(NRF_BOOT_PIN);
-
-    setPinOutput(NRF_RESET_PIN); writePinLow(NRF_RESET_PIN);
+    /* reset RF module */
+    setPinOutput(NRF_RESET_PIN);
+    writePinLow(NRF_RESET_PIN);
     wait_ms(50);
     writePinHigh(NRF_RESET_PIN);
-
+    /* config dial switch pin */
     setPinInputHigh(DEV_MODE_PIN);
     setPinInputHigh(SYS_MODE_PIN);
 }
@@ -123,9 +130,9 @@ void long_press_key(void) {
 
             if (dev_info.link_mode != LINK_USB) {
                 if (dev_info.link_mode != LINK_RF_24) {
-                    dev_info.link_mode      = LINK_BT_1;
-                    dev_info.ble_channel    = LINK_BT_1;
-                    dev_info.rf_channel     = LINK_BT_1;
+                    dev_info.link_mode   = LINK_BT_1;
+                    dev_info.ble_channel = LINK_BT_1;
+                    dev_info.rf_channel  = LINK_BT_1;
                 }
             } else {
                 dev_info.ble_channel = LINK_BT_1;
@@ -171,7 +178,6 @@ void long_press_key(void) {
  * @brief  Release all keys, clear keyboard report.
  */
 void break_all_key(void) {
-    uint8_t report_buf[NKRO_REPORT_BITS + 1];
     bool    nkro_temp = keymap_config.nkro;
 
     clear_weak_mods();
@@ -191,17 +197,8 @@ void break_all_key(void) {
     wait_ms(10);
 
     keymap_config.nkro = nkro_temp;
-
-    if (dev_info.link_mode != LINK_USB) {
-        memset(report_buf, 0, NKRO_REPORT_BITS + 1);
-        uart_send_report(CMD_RPT_BIT_KB, report_buf, 16);
-        wait_ms(10);
-        uart_send_report(CMD_RPT_BYTE_KB, report_buf, 8);
-        wait_ms(10);
-    }
-
-    memset(bitkb_report_buf, 0, sizeof(bitkb_report_buf));
-    memset(bytekb_report_buf, 0, sizeof(bytekb_report_buf));
+    void clear_report_buffer(void);
+    clear_report_buffer();
 }
 
 /**
@@ -306,29 +303,32 @@ void dial_sw_scan(void) {
  * @brief  power on scan dial switch.
  */
 void dial_sw_fast_scan(void) {
-{
-    uint8_t dial_scan_dev = 0;
-    uint8_t dial_scan_sys = 0;
+
+    uint8_t dial_scan_dev  = 0;
+    uint8_t dial_scan_sys  = 0;
     uint8_t dial_check_dev = 0;
     uint8_t dial_check_sys = 0;
-    uint8_t debounce = 0;
+    uint8_t debounce       = 0;
 
     setPinInputHigh(DEV_MODE_PIN);
     setPinInputHigh(SYS_MODE_PIN);
 
     // Debounce to get a stable state
-    for(debounce=0; debounce<10; debounce++) {
+    for (debounce = 0; debounce < 10; debounce++) {
         dial_scan_dev = 0;
         dial_scan_sys = 0;
-        if (readPin(DEV_MODE_PIN))  dial_scan_dev = 0x01;
-        else                        dial_scan_dev = 0;
-        if (readPin(SYS_MODE_PIN))  dial_scan_sys = 0x01;
-        else                        dial_scan_sys = 0;
-        if((dial_scan_dev != dial_check_dev)||(dial_scan_sys != dial_check_sys))
-        {
+        if (readPin(DEV_MODE_PIN))
+            dial_scan_dev = 0x01;
+        else
+            dial_scan_dev = 0;
+        if (readPin(SYS_MODE_PIN))
+            dial_scan_sys = 0x01;
+        else
+            dial_scan_sys = 0;
+        if ((dial_scan_dev != dial_check_dev) || (dial_scan_sys != dial_check_sys)) {
             dial_check_dev = dial_scan_dev;
             dial_check_sys = dial_scan_sys;
-            debounce = 0;
+            debounce       = 0;
         }
         wait_ms(1);
     }
@@ -354,14 +354,13 @@ void dial_sw_fast_scan(void) {
         }
     } else {
         if (dev_info.sys_sw_state != SYS_SW_WIN) {
-            //f_sys_show = 1;
+            // f_sys_show = 1;
             default_layer_set(1 << 2);
             dev_info.sys_sw_state = SYS_SW_WIN;
             keymap_config.nkro    = 1;
             break_all_key();
         }
     }
-}
 }
 
 /**
@@ -378,39 +377,98 @@ void timer_pro(void) {
     }
 
     // step 10ms
-    if (timer_elapsed32(interval_timer) < 10)
-        return;
-    else
-        interval_timer = timer_read32();
+    if (timer_elapsed32(interval_timer) < 10) return;
+    interval_timer = timer_read32();
 
     if (rf_link_show_time < RF_LINK_SHOW_TIME) rf_link_show_time++;
 
-    if (no_act_time < 0xffff) no_act_time++;
+    if (no_act_time < 0xffffffff) no_act_time++;
 
     if (rf_linking_time < 0xffff) rf_linking_time++;
+
+    if (rgb_led_last_act < 0xffff) rgb_led_last_act++;
+
 }
 
 /**
- * @brief  londing eeprom data.
+ * @brief  load eeprom data.
  */
-void londing_eeprom_data(void) {
-    eeconfig_read_user_datablock(&user_config);
+void load_eeprom_data(void) {
+    eeconfig_read_kb_datablock(&user_config);
     if (user_config.default_brightness_flag != 0xA5) {
-        /* first power on, set rgb matrix brightness at middle level*/
-        rgb_matrix_sethsv(RGB_HUE_INIT, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
-        user_config.default_brightness_flag = 0xA5;
-        user_config.ee_side_mode            = side_mode;
-        user_config.ee_side_light           = side_light;
-        user_config.ee_side_speed           = side_speed;
-        user_config.ee_side_rgb             = side_rgb;
-        user_config.ee_side_colour          = side_colour;
-        user_config.sleep_enable            = true;
-        eeconfig_update_user_datablock(&user_config);
+        user_config_reset();
     } else {
         side_mode   = user_config.ee_side_mode;
         side_light  = user_config.ee_side_light;
         side_speed  = user_config.ee_side_speed;
         side_rgb    = user_config.ee_side_rgb;
         side_colour = user_config.ee_side_colour;
+        side_one    = user_config.ee_side_one;
+    }
+}
+
+/**
+ * @brief User config update to eeprom with delay
+ */
+void delay_update_eeprom_data(void) {
+    if (eeprom_update_timer == 0) return;
+    if (timer_elapsed32(eeprom_update_timer) < (1000 * 30)) return;
+    if (side_update) {
+        eeconfig_update_kb_datablock(&user_config);
+        side_update         = 0;
+        eeprom_update_timer = 0;
+    }
+    if (rgb_update) {
+        eeconfig_update_rgb_matrix();
+        rgb_update          = 0;
+        eeprom_update_timer = 0;
+    }
+}
+
+/**
+ * @brief User config to default setting.
+ */
+void user_config_reset(void) {
+    side_mode   = 0;
+    side_light  = SIDE_LIGHT_INIT;
+    side_speed  = 2;
+    side_rgb    = 1;
+    side_colour = 0;
+    side_one    = 0;
+
+    /* first power on, set rgb matrix brightness at middle level*/
+    rgb_matrix_sethsv(RGB_HUE_INIT, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
+
+    user_config.default_brightness_flag = 0xA5;
+    user_config.ee_side_mode            = side_mode;
+    user_config.ee_side_light           = side_light;
+    user_config.ee_side_speed           = side_speed;
+    user_config.ee_side_rgb             = side_rgb;
+    user_config.ee_side_colour          = side_colour;
+    user_config.ee_side_one             = side_one;
+    user_config.sleep_enable            = true;
+    eeconfig_update_kb_datablock(&user_config);
+}
+
+
+/**
+ * @brief Handle LED power
+ * @note Turn off LEDs if not used to save some power. This is ported
+ *       from older Nuphy leaks.
+ */
+void led_power_handle(void) {
+    static uint32_t interval = 0;
+
+    if (timer_elapsed32(interval) < 500 || f_wakeup_prepare) // only check once in a while, less flickering for unhandled cases
+        return;
+
+    interval = timer_read32();
+
+    if (rgb_led_last_act > 100) { // 10ms interval
+        if (rgb_matrix_is_enabled() && rgb_matrix_get_val() != 0) { 
+            pwr_led_on();
+        } else { // brightness is 0 or RGB off.
+            pwr_led_off();
+        }
     }
 }

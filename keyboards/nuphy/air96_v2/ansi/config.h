@@ -32,9 +32,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SD1_RX_PIN                          B7
 #define SD1_RX_PAL_MODE                     0
 
-#define TAP_CODE_DELAY                      8
+// #define TAP_CODE_DELAY                      6
+// #define DYNAMIC_KEYMAP_LAYER_COUNT          8
 #define DYNAMIC_KEYMAP_MACRO_DELAY          8
-#define DYNAMIC_KEYMAP_LAYER_COUNT          8
 
 // This is a 7-bit address, that gets left-shifted and bit 0
 // set to 0 for write, 1 for read (as per I2C protocol)
@@ -68,9 +68,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DRIVER_2_LED_TOTAL                  (42 + 10)
 #define RGB_MATRIX_LED_COUNT                (DRIVER_1_LED_TOTAL + DRIVER_2_LED_TOTAL)
 
-#define EECONFIG_USER_DATA_SIZE             8
+#define EECONFIG_KB_DATA_SIZE               11
+#define MCU_SLEEP_ENABLE                    0
 
 #define RGB_MATRIX_DEFAULT_MODE             RGB_MATRIX_SPLASH
 #define RGB_HUE_INIT                        95
 #define SIDE_LIGHT_INIT                     1
+#define TAPPING_TERM                        400
+#define RGB_MATRIX_DISABLE_KEYCODES
 

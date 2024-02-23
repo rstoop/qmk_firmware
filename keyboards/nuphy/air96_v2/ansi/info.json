@@ -17,9 +17,15 @@
         "key_lock": true,
         "rgb_matrix": true
     },
+    "qmk": {
+        "tap_keycode_delay": 6
+    },
+    "dynamic_keymap": {
+        "layer_count": 8
+    },
     "processor": "STM32F072",
     "bootloader": "stm32-dfu",
-    "debounce": 1,
+    "debounce": 3,
     "matrix_pins": {
         "cols": ["A4", "A5", "A6", "A7", "B0", "B1", "B10", "B11", "B12", "B13", "B14", "B15", "A8", "A9", "A10", "A15", "B3", "C10", "C11", "C12", "D2"],
         "rows": ["C14", "C15", "A0", "A1", "A2", "A3"]
@@ -177,7 +183,19 @@
             {"matrix": [5, 15], "x": 140,   "y": 50, "flags": 4},
             {"matrix": [5, 16], "x": 150,   "y": 50, "flags": 4},
             {"matrix": [5, 17], "x": 160,   "y": 50, "flags": 4},
-            {"matrix": [5, 19], "x": 170,   "y": 50, "flags": 4}
+            {"matrix": [5, 19], "x": 170,   "y": 50, "flags": 4},
+
+            {"flags": 0},
+            {"flags": 0},
+            {"flags": 0},
+            {"flags": 0},
+            {"flags": 0},
+
+            {"flags": 0},
+            {"flags": 0},
+            {"flags": 0},
+            {"flags": 0},
+            {"flags": 0}
         ]
     },
     "layouts": {

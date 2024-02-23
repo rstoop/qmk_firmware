@@ -49,6 +49,7 @@ typedef enum {
 #define RF_SNIF                 6
 #define RF_INVAILD              0XFE
 #define RF_ERR_STATE            0XFF
+#define RF_WAKE                 0XA5
 
 #define CMD_POWER_UP            0XF0
 #define CMD_SLEEP               0XF1
@@ -74,6 +75,7 @@ typedef enum {
 #define CMD_SET_24G_NAME        0XCA
 #define CMD_GO_TEST             0XCF
 #define CMD_RF_DFU              0XB1
+#define CMD_NULL                0X00
 
 #define CMD_WRITE_DATA          0X80
 #define CMD_READ_DATA           0X81
@@ -110,6 +112,7 @@ typedef struct
     uint8_t RXDOverTime;
     uint8_t TXDLenBack;
     uint8_t TXDOffset;
+    uint8_t RXCmd;
     uint8_t TXDBuf[UART_MAX_LEN];
     uint8_t RXDBuf[UART_MAX_LEN];
 } USART_MGR_STRUCT;
@@ -122,7 +125,7 @@ typedef struct
     uint8_t rf_state;
     uint8_t rf_charge;
     uint8_t rf_led;
-    uint8_t rf_baterry;
+    uint8_t rf_battery;
     uint8_t sys_sw_state;
 } DEV_INFO_STRUCT;
 
@@ -134,6 +137,7 @@ typedef struct
     uint8_t ee_side_speed;
     uint8_t ee_side_rgb;
     uint8_t ee_side_colour;
+    uint8_t ee_side_one;
     uint8_t sleep_enable;
     uint8_t retain1;
     uint8_t retain2;
@@ -145,10 +149,11 @@ void    rf_device_init(void);
 void    uart_send_report_repeat(void);
 void    uart_receive_pro(void);
 void    uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_size);
-void    side_speed_contol(uint8_t dir);
-void    side_light_contol(uint8_t dir);
+void    side_speed_control(uint8_t dir);
+void    side_light_control(uint8_t dir);
 void    side_colour_control(uint8_t dir);
 void    side_mode_control(uint8_t dir);
+void    side_one_control(uint8_t dir);
 void    side_led_show(void);
 void    sleep_handle(void);
 void    bat_led_close(void);
@@ -161,5 +166,8 @@ void    switch_dev_link(uint8_t mode);
 void    dial_sw_scan(void);
 void    dial_sw_fast_scan(void);
 void    timer_pro(void);
-void    londing_eeprom_data(void);
+void    load_eeprom_data(void);
+void    delay_update_eeprom_data(void);
+void    user_config_reset(void);
+void    led_power_handle(void);
 uint8_t uart_send_cmd(uint8_t cmd, uint8_t ack_cnt, uint8_t delayms);
