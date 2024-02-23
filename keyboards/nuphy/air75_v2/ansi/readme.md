@@ -25,4 +25,6 @@ Enter the bootloader:
 
 * **Hardware reset**: Remove the capslock keycap, hold the little button beneath and plug in the keyboard.
 
-@@include[customizations.md](customizations.md)
+## Customizations and Fixes
+
+[customizations.md](customizations.md)

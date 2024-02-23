@@ -65,7 +65,7 @@ The following customizations were applied on top of the stock firmware.
 
 ## Note
 
-- In order for you to be able to properly configure the keyboard in via please use keymaps/nuphy-air75-v2-via_custom_v1.json as an initial json to use for debug tab in VIA. If you do not use it all the custom keys will not be shown and sone keys will not be identified correctly.
+- In order for you to be able to properly configure the keyboard in via please use [keymaps/nuphy-air75-v2-via_custom_v1.json](keymaps/nuphy-air75-v2-via_custom_v1.json) as an initial json to use for debug tab in VIA. If you do not use it all the custom keys will not be shown and sone keys will not be identified correctly.
 
 ## Author
 
