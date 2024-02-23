@@ -17,9 +17,15 @@
         "key_lock": true,
         "rgb_matrix": true
     },
+    "qmk": {
+        "tap_keycode_delay": 6
+    },
+    "dynamic_keymap": {
+        "layer_count": 8
+    },
     "processor": "STM32F072",
     "bootloader": "stm32-dfu",
-    "debounce": 2,
+    "debounce": 3,
     "matrix_pins": {
         "cols": ["A4", "A5", "A6", "B9", "B0", "B1", "B10", "B11", "B12", "B13", "B14", "B15", "A8", "A9", "A10", "A15", "B3"],
         "rows": ["C14", "C15", "A0", "A1", "A2", "A3"]
@@ -162,7 +168,8 @@
             {"matrix": [5, 6], "x": 37.5, "y": 50, "flags": 4},
             {"matrix": [5, 2], "x": 25, "y": 50, "flags": 4},
             {"matrix": [5, 1], "x": 12.5, "y": 50, "flags": 4},
-            {"matrix": [5, 0], "x": 0, "y": 50, "flags": 4}
+            {"matrix": [5, 0], "x": 0, "y": 50, "flags": 4},
+            {"flags": 4}
         ]
     },
     "ws2812": {
