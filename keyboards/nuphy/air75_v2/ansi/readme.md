@@ -27,4 +27,4 @@ Enter the bootloader:
 
 ## Customizations and Fixes
 
-[customizations.md](customizations.md)
+* [customizations.md](customizations.md)
