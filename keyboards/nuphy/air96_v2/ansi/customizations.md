@@ -53,7 +53,7 @@ The following customizations were applied on top of the stock firmware.
 
 - Default startup LED brightness is set to half of max. Default RGB effect is RGB_MATRIX_CYCLE_LEFT_RIGHT. 
 - Default tapping has been reduced to 6ms (from 8ms default) and debounce set to 1 ms (default). Debounce algorithm set asym_eager_defer_pk
-- Various timings improvments to make the keyboard feel faster when typing.
+- Various timings improvements to make the keyboard feel faster when typing.
 - Fix keyboard randomly crashing/freezing. (algorithm from jincao1)
 - Deep sleep algorithm (level 3 sleep) is applied using code from nuphy / jincao1
 - Fix keyboard randomly crashing/freezing (algorithm from jincao1 with small modifications)
