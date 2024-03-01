@@ -15,12 +15,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 // key matrix pins
+/*
 #define KROW_0                   C14
 #define KROW_1                   C15
 #define KROW_2                   A0
 #define KROW_3                   A1
 #define KROW_4                   A2
 #define KROW_5                   A3
+*/
 
 #define EXTI_PORT_R0             EXTI_PortSourceGPIOC
 #define EXTI_PORT_R1             EXTI_PortSourceGPIOC
@@ -37,6 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define EXTI_PIN_R5              3   // A3
 
 //------------------------
+/*
 #define KCOL_0        A4
 #define KCOL_1        A5
 #define KCOL_2        A6
@@ -58,11 +61,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define KCOL_18       C11
 #define KCOL_19       C12
 #define KCOL_20       D2
+*/
 
 #define EXTI_PORT_C0  EXTI_PortSourceGPIOA  // A4
 #define EXTI_PORT_C1  EXTI_PortSourceGPIOA  // A5
 #define EXTI_PORT_C2  EXTI_PortSourceGPIOA  // A6
-#define EXTI_PORT_C3  EXTI_PortSourceGPIOA  // B9
+#define EXTI_PORT_C3  EXTI_PortSourceGPIOA  // A7
 #define EXTI_PORT_C4  EXTI_PortSourceGPIOB  // B0
 #define EXTI_PORT_C5  EXTI_PortSourceGPIOB  // B1
 #define EXTI_PORT_C6  EXTI_PortSourceGPIOB  // B10
@@ -85,7 +89,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define EXTI_PIN_C0   4   // A4
 #define EXTI_PIN_C1   5   // A5
 #define EXTI_PIN_C2   6   // A6
-#define EXTI_PIN_C3   7   // B9
+#define EXTI_PIN_C3   7   // A7
 #define EXTI_PIN_C4   0   // B0
 #define EXTI_PIN_C5   1   // B1
 #define EXTI_PIN_C6   10  // B10
@@ -99,10 +103,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define EXTI_PIN_C14  10  // A10
 #define EXTI_PIN_C15  15  // A15
 #define EXTI_PIN_C16  3   // B3
-#define EXTI_PIN_C17  10
-#define EXTI_PIN_C18  11
-#define EXTI_PIN_C19  12
-#define EXTI_PIN_C20  2
+#define EXTI_PIN_C17  10  // C10
+#define EXTI_PIN_C18  11  // C11
+#define EXTI_PIN_C19  12  // C12
+#define EXTI_PIN_C20  2   // D2
 
 void enter_light_sleep(void);
 void exit_light_sleep(void);

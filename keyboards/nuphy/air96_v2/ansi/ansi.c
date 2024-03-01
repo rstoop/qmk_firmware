@@ -36,16 +36,14 @@ extern DEV_INFO_STRUCT dev_info;
 extern uint16_t        link_timeout;
 extern uint16_t        link_timeout_rf24;
 extern uint32_t        deep_sleep_delay;
-extern uint32_t        uart_rpt_timer;
 extern uint32_t        eeprom_update_timer;
+uint16_t               numlock_timer = 0;
 extern bool            rgb_update;
 
 /* qmk process record */
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     no_act_time       = 0;
     rf_linking_time   = 0;
-    uart_rpt_timer    = timer_read32();  // reset uart repeat timer.
-    static uint16_t   numlock_timer;
 
     if (!process_record_user(keycode, record)) {
         return false;
@@ -379,13 +377,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     unregister_code(KC_INS);
                 }
             } else {
-                if (numlock_timer == 0) {
-                } else if (timer_elapsed(numlock_timer) > TAPPING_TERM) {
-                    numlock_timer = 0;
-                    register_code(KC_NUM);
-                    wait_ms(10);
-                    unregister_code(KC_NUM);
-                } else {
+                if (numlock_timer != 0 && timer_elapsed(numlock_timer) < TAPPING_TERM) {
                     numlock_timer = 0;
                     register_code(KC_INS);
                     wait_ms(10);
@@ -393,6 +385,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 }
             }
             return false;
+
     }
     return true;
 }

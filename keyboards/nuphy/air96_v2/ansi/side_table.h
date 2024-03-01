@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #define    STARRY_INDEX_LEN       (160)
-#define    WAVE_TAB_LEN            112
+// #define    WAVE_TAB_LEN            112
 #define    BREATHE_TAB_LEN         128
 #define    MIXCOLOUR_TAB_LEN       144
 #define    FLOW_COLOUR_TAB_LEN     224
@@ -31,9 +31,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //----------------------------------------------------------------
 const uint8_t breathe_data_tab[BREATHE_TAB_LEN] =
 {
-    0,      1,      2,      3,      4,      5,      6,      7,
-    8,      9,      10,     12,     14,     16,     18,     20,
-    22,     24,     27,     30,     33,     36,     39,     42,
+//    0,      1,      2,      3,      4,      5,      6,      7,
+//    8,      9,      10,     12,     14,     16,     18,     20,
+//    22,     24,     27,     30,     33,     36,     39,     42,
+//    45,     49,     53,     57,     61,     65,     69,     73,
+    8,      9,      10,     11,     12,     13,     14,     15,
+    16,     17,     18,     19,     20,     21,     22,     23,
+    25,     27,     29,     31,     33,     36,     39,     42,
     45,     49,     53,     57,     61,     65,     69,     73,
     77,     81,     85,     89,     94,     99,     104,    109,
     114,    119,    124,    129,    134,    140,    146,    152,
@@ -53,7 +57,7 @@ const uint8_t breathe_data_tab[BREATHE_TAB_LEN] =
 /*----------------------------------------------------------------
         wave data table
 ----------------------------------------------------------------*/
-const uint8_t wave_data_tab[WAVE_TAB_LEN] =
+/* const uint8_t wave_data_tab[WAVE_TAB_LEN] =
 {
     22,     23,     24,     25,     27,     28,     30,     31,
     33,     34,     36,     37,     39,     40,     42,     43,
@@ -71,7 +75,7 @@ const uint8_t wave_data_tab[WAVE_TAB_LEN] =
     73,     69,     65,     61,     57,     53,     49,     45,
     42,     39,     36,     33,     30,     27,     24,     22,
 };
-
+*/
 //----------------------------------------------------------------
 //        rainbow color table
 //----------------------------------------------------------------

@@ -27,8 +27,12 @@ static bool rgb_led_on  = 0;
 
 void clear_report_buffer(void);
 
-
 #if (MCU_SLEEP_ENABLE)
+
+// Pin definitions
+static const pin_t row_pins[MATRIX_ROWS] = MATRIX_ROW_PINS;
+static const pin_t col_pins[MATRIX_COLS] = MATRIX_COL_PINS;
+
 
 /** ================================================================
  * @brief  Turn off USB
@@ -103,6 +107,7 @@ void enter_deep_sleep(void) {
     if (tim6_enabled) TIM_Cmd(TIM6, DISABLE);
 
     //------------------------ Configure WakeUp Key
+/*
     setPinOutput(KCOL_0);
     writePinHigh(KCOL_0);
     setPinOutput(KCOL_1);
@@ -145,13 +150,24 @@ void enter_deep_sleep(void) {
     writePinHigh(KCOL_19);
     setPinOutput(KCOL_20);
     writePinHigh(KCOL_20);
+*/
 
+/*
     setPinInputLow(KROW_0);
     setPinInputLow(KROW_1);
     setPinInputLow(KROW_2);
     setPinInputLow(KROW_3);
     setPinInputLow(KROW_4);
     setPinInputLow(KROW_5);
+*/
+
+    for (int i = 0; i < ARRAY_SIZE(col_pins); ++i) {
+        setPinOutput(col_pins[i]);
+        writePinHigh(col_pins[i]);
+    }
+    for (int i = 0; i < ARRAY_SIZE(row_pins); ++i) {
+        setPinInputLow(row_pins[i]);
+    }
 
     // Configure interrupt source - all 5 rows of the keyboard.
     SYSCFG_EXTILineConfig(EXTI_PORT_R0, EXTI_PIN_R0);
@@ -188,10 +204,15 @@ void enter_deep_sleep(void) {
     setPinOutput(SYS_MODE_PIN);
     writePinLow(SYS_MODE_PIN);
 
-    setPinInput(NRF_WAKEUP_PIN);
-    setPinOutput(NRF_BOOT_PIN);
-    writePinLow(NRF_BOOT_PIN);
+    setPinOutput(A11);
+    writePinLow(A11);
+    setPinOutput(A12);
+    writePinLow(A12);
 
+    setPinInputHigh(NRF_BOOT_PIN);
+
+    setPinOutput(NRF_WAKEUP_PIN);
+    writePinHigh(NRF_WAKEUP_PIN);
 
     // Enter low power mode and wait for interrupt signal
     // PWR_EnterSTOPMode(PWR_Regulator_ON, PWR_STOPEntry_WFI);
@@ -215,11 +236,12 @@ void exit_deep_sleep(void) {
     setPinInputHigh(DEV_MODE_PIN); // PC0
     setPinInputHigh(SYS_MODE_PIN); // PC1
 
+    /* set RF module boot pin high */
+    // setPinInputHigh(NRF_BOOT_PIN);
+
     /* Wake RF module */
     setPinOutput(NRF_WAKEUP_PIN);
-    writePinHigh(NRF_WAKEUP_PIN);
-
-    setPinInputHigh(NRF_BOOT_PIN);
+    // writePinHigh(NRF_WAKEUP_PIN);
 
     // Power on LEDs This is missing from Nuphy's logic.
     led_pwr_wake_handle();

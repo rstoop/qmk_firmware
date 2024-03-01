@@ -43,7 +43,7 @@ void signal_sleep(uint8_t r, uint8_t g, uint8_t b) {
 
     pwr_led_on();
     wait_ms(50); // give some time to ensure LED powers on.
-    set_side_rgb(2, r, g, b);
+    set_side_rgb(3, r, g, b);
     rgb_matrix_update_pwm_buffers();
     wait_ms(300);
 }
@@ -78,7 +78,7 @@ void sleep_handle(void) {
         f_goto_deepsleep = 0;
     else if (no_act_time >= deep_sleep_delay && dev_info.link_mode == LINK_RF_24)
         f_goto_deepsleep = 1;
-    else if (no_act_time >= (10 * deep_sleep_delay))
+    else if (no_act_time >= (5 * deep_sleep_delay))
         f_goto_deepsleep = 1;
 
     if (f_goto_deepsleep != 0) {

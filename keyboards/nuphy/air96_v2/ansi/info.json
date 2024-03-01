@@ -11,7 +11,7 @@
         "bootmagic": true,
         "mousekey": true,
         "extrakey": true,
-        "console": true,
+        "console": false,
         "command": false,
         "nkro": true,
         "key_lock": true,
@@ -25,7 +25,7 @@
     },
     "processor": "STM32F072",
     "bootloader": "stm32-dfu",
-    "debounce": 3,
+    "debounce": 1,
     "matrix_pins": {
         "cols": ["A4", "A5", "A6", "A7", "B0", "B1", "B10", "B11", "B12", "B13", "B14", "B15", "A8", "A9", "A10", "A15", "B3", "C10", "C11", "C12", "D2"],
         "rows": ["C14", "C15", "A0", "A1", "A2", "A3"]
@@ -37,6 +37,7 @@
         "max_brightness": 255,
         "val_steps": 52,
         "speed_steps": 52,
+	"sleep": true,
         "animations": {
             "gradient_up_down": true,
             "gradient_left_right": true,

@@ -69,6 +69,7 @@ extern uint8_t            side_speed;
 extern uint8_t            side_rgb;
 extern uint8_t            side_colour;
 extern uint8_t            side_one;
+extern uint16_t           numlock_timer;
 
 /**
  * @brief  gpio initial.
@@ -171,6 +172,14 @@ void long_press_key(void) {
         }
     } else {
         rgb_test_press_delay = 0;
+    }
+
+    // Trigger NumLock
+    if (numlock_timer != 0 && timer_elapsed(numlock_timer) > TAPPING_TERM) {
+        register_code(KC_NUM);
+        wait_ms(10);
+        unregister_code(KC_NUM);
+        numlock_timer = 0;
     }
 }
 
@@ -470,5 +479,6 @@ void led_power_handle(void) {
         } else { // brightness is 0 or RGB off.
             pwr_led_off();
         }
+        if (f_bat_num_show) pwr_led_on();
     }
 }

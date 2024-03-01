@@ -113,7 +113,8 @@ void uart_send_repeat_from_queue(void) {
         }
     }
 
-    if (timer_elapsed32(repeat_timer) > 3) {
+    uint8_t queue_rpt_int = dev_info.link_mode == LINK_RF_24 ? 10 : 3;
+    if (timer_elapsed32(repeat_timer) > queue_rpt_int) {
         uart_send_report(report_buff.cmd, report_buff.buffer, report_buff.length);
         repeat_timer = timer_read32();
     }
@@ -128,14 +129,15 @@ void uart_send_report_repeat(void) {
 
     if (dev_info.rf_state != RF_CONNECT) {
         // toss away queue after some time if disconnected to prevent sending random keys
-        if (no_act_time > 200) clear_report_buffer(); // 2 seconds
+	if (no_act_time > 200 && dev_info.link_mode == LINK_RF_24) clear_report_buffer(); // 2 seconds
+        else if (no_act_time > 600) clear_report_buffer(); // 6 seconds
         return;
     }
 
     // queue is not empty, send from queue.
     if (!rf_queue.is_empty()) {
         uart_send_repeat_from_queue();
-        uart_rpt_timer = timer_read32();
+        // uart_rpt_timer = timer_read32();
         return;
     }
 
@@ -456,6 +458,7 @@ void dev_sts_sync(void) {
     */
     if (f_wakeup_prepare && f_rf_sleep) return;
     uart_send_cmd(CMD_RF_STS_SYSC, 1, 0);
+    uart_rpt_timer = timer_read32();
 
     if (dev_info.link_mode != LINK_USB) {
         if (++sync_lost >= 5) {
@@ -480,7 +483,7 @@ void UART_Send_Bytes(uint8_t *Buffer, uint32_t Length) {
     wait_us(50 + Length * 30);
     writePinHigh(NRF_WAKEUP_PIN);
 
-    wait_us(200);
+    wait_us(300);
 }
 
 /**
@@ -520,7 +523,7 @@ void uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_s
     Usart_Mgr.TXDBuf[4 + report_size] = get_checksum(&Usart_Mgr.TXDBuf[4], report_size);
 
     UART_Send_Bytes(&Usart_Mgr.TXDBuf[0], report_size + 5);
-
+    uart_rpt_timer = timer_read32(); // reset uart repeat timer.
     // wait_us(200);
 }
 
@@ -529,12 +532,11 @@ void uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_s
  */
 void uart_receive_pro(void) {
     static bool rcv_start     = false;
-    /* static uint32_t rcv_timer = 0;
+    static uint32_t rcv_timer = 0;
 
     // Process at most once every millisecond.
     if (timer_elapsed32(rcv_timer) < 1) return;
     rcv_timer = timer_read32();
-    */
 
     // If there's data, wait a bit first then process it all.
     // If you don't do this, you may lose sync.

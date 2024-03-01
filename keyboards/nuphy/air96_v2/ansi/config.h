@@ -32,6 +32,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SD1_RX_PIN                          B7
 #define SD1_RX_PAL_MODE                     0
 
+#ifndef NO_DEBUG
+#define NO_DEBUG
+#endif // !NO_DEBUG
+
+#if !defined(NO_PRINT) && !defined(CONSOLE_ENABLE)
+#define NO_PRINT
+#endif // !NO_PRINT
+
 // #define TAP_CODE_DELAY                      6
 // #define DYNAMIC_KEYMAP_LAYER_COUNT          8
 #define DYNAMIC_KEYMAP_MACRO_DELAY          8
@@ -68,10 +76,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DRIVER_2_LED_TOTAL                  (42 + 10)
 #define RGB_MATRIX_LED_COUNT                (DRIVER_1_LED_TOTAL + DRIVER_2_LED_TOTAL)
 
-#define EECONFIG_KB_DATA_SIZE               11
-#define MCU_SLEEP_ENABLE                    0
+#define EECONFIG_KB_DATA_SIZE               10
+#define MCU_SLEEP_ENABLE                    1
+#define GPIO_INPUT_PIN_DELAY                1
+#define USB_POLLING_INTERVAL_MS             1
 
-#define RGB_MATRIX_DEFAULT_MODE             RGB_MATRIX_SPLASH
+#define RGB_MATRIX_DEFAULT_MODE             RGB_MATRIX_CYCLE_LEFT_RIGHT
 #define RGB_HUE_INIT                        95
 #define SIDE_LIGHT_INIT                     1
 #define TAPPING_TERM                        400

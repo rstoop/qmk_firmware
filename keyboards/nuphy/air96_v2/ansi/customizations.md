@@ -51,14 +51,15 @@ The following customizations were applied on top of the stock firmware.
 
 -  The system indicators now have 3 levels of brightness (before there was only 1 level) that are dependend on the side light brithness. Thus for example capslock will no longer light at full brightness if side leds have a lower brithness selected.
 
-- Default startup LED brightness is set to half of max. Default RGB effect is RGB_MATRIX_SPLASH. 
-- Default tapping has been reduced to 6ms (from 8ms default) and debounce increased to 3 ms (from 1 ms default)
+- Default startup LED brightness is set to half of max. Default RGB effect is RGB_MATRIX_CYCLE_LEFT_RIGHT. 
+- Default tapping has been reduced to 6ms (from 8ms default) and debounce set to 1 ms (default). Debounce algorithm set asym_eager_defer_pk
+- Various timings improvments to make the keyboard feel faster when typing.
 - Fix keyboard randomly crashing/freezing. (algorithm from jincao1)
 - Deep sleep algorithm (level 3 sleep) is applied using code from nuphy / jincao1
 - Fix keyboard randomly crashing/freezing (algorithm from jincao1 with small modifications)
 - Fix LED lights not powering down when not used. Because of how the keyboard is build, both rgb and side leds need to be off, they can't be controlled individually (algorithm from jincao1)
 - Fix keystrokes being lost on wake. Wake keystrokes will appear after a very short delay while board re-establishes connection. BT may not be as reliable as the dongle.
-  This is achieved through a buffer of 64 key actions (key down and key up are 2 actions). The buffer is cleared if connection is not established within 1s after the last action.
+  This is achieved through a buffer of 64 key actions (key down and key up are 2 actions). The buffer is cleared if connection is not established within 2s(2.4G) or 6s(BT) after the last action .
   Key events after the buffer is full will also be dropped. (Buffer algorithm taken from jincao1)
 - Enhance keyboard reports transmission logic to greatly reduce stuck/lost key strokes. It may still occasionally drop/repeat keys but it's rare. (algorithm from jincao1 with small modifications)
 - Side light algorithms are modified in order to reduce firmware size and to make animations more smooth. On the lowest level of brightness for side leds you might see some jerkiness on some of the breath algorithm. This is because the lowest level of brightness is lower than standard Nuphy.
