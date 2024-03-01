@@ -244,7 +244,7 @@ void side_mode_control(uint8_t dir) {
 
 void set_side_rgb(uint8_t side, uint8_t r, uint8_t g, uint8_t b) {
     // side = 1 => left
-    // side = 2 => rigth
+    // side = 2 => right
     // side = 3 => both
     uint8_t start = 0;
     uint8_t end = SIDE_LINE * 2;
