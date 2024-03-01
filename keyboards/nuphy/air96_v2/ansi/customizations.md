@@ -9,9 +9,9 @@ The following customizations were applied on top of the stock firmware.
   2. Leds off, RF module off, MCU on
   3. Leds off, RF module off, MCU standby/sleep  // currently not enabled 
 
-  By default keyboard will go to sleep level 1 in 2 minutes and sleep level 2 in 6 minutes (when using 2.4G dongle) or in 60 minutes (when using BT connection).
-  If 2.4G is selected and there is no connectivity in 10 seconds keyboard will enter level 2 sleep.
-  If BT is selected and there is no connectivity in 60 seconds keyboard will enter level 2 sleep.
+  By default keyboard will go to sleep level 1 in 2 minutes and sleep level 3 in 6 minutes (when using 2.4G dongle) or in 30 minutes (when using BT connection).
+  If 2.4G is selected and there is no connectivity in 10 seconds keyboard will enter level 3 sleep.
+  If BT is selected and there is no connectivity in 60 seconds keyboard will enter level 3 sleep.
 
   To change sleep mode you can use Fn + ]:
   When on default mode (explained above, the right side leds  will flash 4 times green).
@@ -19,19 +19,19 @@ The following customizations were applied on top of the stock firmware.
   The next mode will flash 4 times orange ( This is actually the default sleep policy for Nuphy firmware version 1.1.3). 
   In this mode the following applies:
   Keyboard will go to sleep level 1 in 6 minutes
-  If 2.4G or BT is selected and there is no connectivity in 120 seconds keyboard will enter level 2 sleep.
+  If 2.4G or BT is selected and there is no connectivity in 120 seconds keyboard will enter level 3 sleep.
 
   On the last sleep mode the right side leds will flash 4 times red.
   In this mode the keyboard will never sleep.
 
-  Side indicators will flash blue for 0.3s when board enters level 2 sleep mode, as an indicator.
+  Side indicators will flash freen for 0.3s when board enters level 3 sleep mode, as an indicator.
 
 -  Fn + B will show current battery levels using numbers from 1 to 0 (0 means 100%). The color will be red, yellow, light green, dark green) based on battery level.
    Last led will have a different color based on battery percentage as well. 
    Example:
    if 1 to 4 lights up and the last led that lights up 5 is dark green color you will have between 47 and 50% battery.
-   if 1 to 4 lights up and the last led that lights up 5 is light green color you will have between 44 and 46 % battery.
-   if 1 to 4 lights up and the last led that lights up 5 is yellow color you will have between 41 and 43 % battery.
+   if 1 to 4 lights up and the last led that lights up 5 is yellow color you will have between 44 and 46 % battery.
+   if 1 to 4 lights up and the last led that lights up 5 is red color you will have between 41 and 43 % battery.
 
 -  The custom MAC keys now have double functionality:
     MAC_VOICE if Mac mode selected and F5             if Win mode is selected
@@ -54,7 +54,7 @@ The following customizations were applied on top of the stock firmware.
 - Default startup LED brightness is set to half of max. Default RGB effect is RGB_MATRIX_SPLASH. 
 - Default tapping has been reduced to 6ms (from 8ms default) and debounce increased to 3 ms (from 1 ms default)
 - Fix keyboard randomly crashing/freezing. (algorithm from jincao1)
-- Deep sleep algorithm (level 2 sleep) is applied using code from nuphy / jincao1
+- Deep sleep algorithm (level 3 sleep) is applied using code from nuphy / jincao1
 - Fix keyboard randomly crashing/freezing (algorithm from jincao1 with small modifications)
 - Fix LED lights not powering down when not used. Because of how the keyboard is build, both rgb and side leds need to be off, they can't be controlled individually (algorithm from jincao1)
 - Fix keystrokes being lost on wake. Wake keystrokes will appear after a very short delay while board re-establishes connection. BT may not be as reliable as the dongle.
@@ -70,6 +70,4 @@ The following customizations were applied on top of the stock firmware.
 ## Note
 
 - In order for you to be able to properly configure the keyboard in via please use [keymaps/nuphy-air96-v2-via_custom_v1.json](keymaps/nuphy-air96-v2-via_custom_v1.json) as an initial json to use for debug tab in VIA. If you do not use it all the custom keys will not be shown and sone keys will not be identified correctly.
-
-- Currently sleep level 3 is not working on air96v2 so it is disabled by default. The MCU does not enter sleep (only the RF module).
 
