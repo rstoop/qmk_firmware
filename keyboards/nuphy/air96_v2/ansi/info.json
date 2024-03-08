@@ -1,31 +1,44 @@
 {
-    "keyboard_name": "NuPhy Air96 V2",
     "manufacturer": "NuPhy",
+    "keyboard_name": "NuPhy Air96 V2",
+    "processor": "STM32F072",
+    "bootloader": "stm32-dfu",
+        "build": {
+        "debounce_type": "asym_eager_defer_pk",
+        "lto": true
+    },
+    "debounce": 1,
+    "features": {
+        "bootmagic": true,
+        "command": false,
+        "console": false,
+        "extrakey": true,
+        "key_lock": true,
+        "mousekey": true,
+        "nkro": true,
+        "rgb_matrix": true
+    },
+    "caps_word": {
+        "double_tap_shift_turns_on": true,
+        "enabled": true,
+        "idle_timeout": 5000
+    },
     "usb":{
         "vid": "0x19F5",
         "pid": "0x3265",
+        "polling_interval": 1,
         "device_version": "0.0.1",
         "no_startup_check": true
-    },
-    "features": {
-        "bootmagic": true,
-        "mousekey": true,
-        "extrakey": true,
-        "console": false,
-        "command": false,
-        "nkro": true,
-        "key_lock": true,
-        "rgb_matrix": true
     },
     "qmk": {
         "tap_keycode_delay": 6
     },
+    "tapping": {
+        "term": 300
+    },
     "dynamic_keymap": {
         "layer_count": 8
     },
-    "processor": "STM32F072",
-    "bootloader": "stm32-dfu",
-    "debounce": 1,
     "matrix_pins": {
         "cols": ["A4", "A5", "A6", "A7", "B0", "B1", "B10", "B11", "B12", "B13", "B14", "B15", "A8", "A9", "A10", "A15", "B3", "C10", "C11", "C12", "D2"],
         "rows": ["C14", "C15", "A0", "A1", "A2", "A3"]
@@ -37,11 +50,19 @@
         "max_brightness": 255,
         "val_steps": 52,
         "speed_steps": 52,
-        "sleep": true,
+	"sleep": true,
+        "led_process_limit": 12,
+        "default": {
+            "animation": "cycle_left_right",
+            "hue": 0,
+            "val": 151,
+            "speed": 151
+        },
         "animations": {
             "gradient_up_down": true,
             "gradient_left_right": true,
             "breathing": true,
+            "flower_blooming": true,
             "band_sat": true,
             "band_val": true,
             "band_pinwheel_sat": true,
@@ -289,7 +310,7 @@
                 {"label": ">.", "matrix": [4, 10], "x": 10.25, "y": 4},
                 {"label": "?/", "matrix": [4, 11], "x": 11.25, "y": 4},
                 {"label": "Shift", "matrix": [4, 13], "x": 12.25, "y": 4, "w": 1.75},
-                {"label": "↑", "matrix": [4, 15], "x": 14, "y": 4},
+                {"label": "\u2191", "matrix": [4, 15], "x": 14, "y": 4},
                 {"label": "1", "matrix": [4, 17], "x": 15, "y": 4},
                 {"label": "2", "matrix": [4, 18], "x": 16, "y": 4},
                 {"label": "3", "matrix": [4, 19], "x": 17, "y": 4},
@@ -302,9 +323,9 @@
                 {"label": "Cmd", "matrix": [5, 9], "x": 10, "y": 5},
                 {"label": "Fn", "matrix": [5, 10], "x": 11, "y": 5},
                 {"label": "Ctrl", "matrix": [5, 13], "x": 12, "y": 5},
-                {"label": "←", "matrix": [5, 14], "x": 13, "y": 5},
-                {"label": "↓", "matrix": [5, 15], "x": 14, "y": 5},
-                {"label": "→", "matrix": [5, 16], "x": 15, "y": 5},
+                {"label": "\u2190", "matrix": [5, 14], "x": 13, "y": 5},
+                {"label": "\u2193", "matrix": [5, 15], "x": 14, "y": 5},
+                {"label": "\u2192", "matrix": [5, 16], "x": 15, "y": 5},
                 {"label": "0", "matrix": [5, 17], "x": 16, "y": 5},
                 {"label": ".", "matrix": [5, 19], "x": 17, "y": 5}
 

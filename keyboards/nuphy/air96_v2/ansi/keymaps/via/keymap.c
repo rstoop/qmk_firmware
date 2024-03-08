@@ -45,7 +45,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 	KC_LCTL,	KC_LGUI,	KC_LALT,										KC_SPC, 							KC_RALT,	MO(3),   	KC_RCTL,							KC_LEFT,	KC_DOWN,    KC_RGHT,	KC_P0,		KC_PDOT),
 // layer 3 win Fn
 [3] = LAYOUT_96_ansi(
-	_______, 	KC_BRID,   	KC_BRIU,    KC_CALC,  	SEARCH,   	_______,   	_______,   	KC_MPRV,   	KC_MPLY,   	KC_MNXT,  	KC_MUTE, 	KC_VOLD, 	KC_VOLU,	_______,	KC_INS,		_______,	_______,	_______,	_______,
+	_______, 	KC_BRID,   	KC_BRIU,    KC_CALC,  	SEARCH,   	_______,   	 _______,   	KC_MPRV,   	KC_MPLY,   	KC_MNXT,  	KC_MUTE, 	KC_VOLD, 	KC_VOLU,	_______,	KC_INS,		_______,	_______,	_______,	_______,
 	_______, 	LNK_BLE1,  	LNK_BLE2,  	LNK_BLE3,  	LNK_RF,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	_______, 	_______,				_______,	_______,	_______,	_______,
 	_______, 	_______,   	_______,   	_______,  	_______,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	DEV_RESET,	SLEEP_MODE, BAT_SHOW,				_______,	_______,	_______,	_______,
 	_______,	_______,   	_______,   	_______,  	_______,   	_______,   	_______,	_______,   	_______,   	_______,  	_______,	_______,  	_______,							_______,	_______,	_______,

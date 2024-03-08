@@ -109,14 +109,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define EXTI_PIN_C20  2   // D2
 
 void enter_light_sleep(void);
-void exit_light_sleep(void);
+void exit_light_sleep(bool stm32_init);
 void enter_deep_sleep(void);
 void exit_deep_sleep(void);
 
 void pwr_led_off(void);
 void pwr_led_on(void);
 
-bool is_rgb_led_on(void);
-
 void led_pwr_sleep_handle(void);
 void led_pwr_wake_handle(void);
+void wake_rf_cmd(void);

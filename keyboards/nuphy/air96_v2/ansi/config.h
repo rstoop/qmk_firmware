@@ -40,8 +40,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define NO_PRINT
 #endif // !NO_PRINT
 
-// #define TAP_CODE_DELAY                      6
-// #define DYNAMIC_KEYMAP_LAYER_COUNT          8
 #define DYNAMIC_KEYMAP_MACRO_DELAY          8
 
 // This is a 7-bit address, that gets left-shifted and bit 0
@@ -79,11 +77,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define EECONFIG_KB_DATA_SIZE               10
 #define MCU_SLEEP_ENABLE                    1
 #define GPIO_INPUT_PIN_DELAY                1
-#define USB_POLLING_INTERVAL_MS             1
 
-#define RGB_MATRIX_DEFAULT_MODE             RGB_MATRIX_CYCLE_LEFT_RIGHT
-#define RGB_HUE_INIT                        95
-#define SIDE_LIGHT_INIT                     1
-#define TAPPING_TERM                        400
 #define RGB_MATRIX_DISABLE_KEYCODES
 

@@ -22,29 +22,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mcu_pwr.h"
 #include "rf_queue.h"
 
-extern user_config_t   user_config;
-extern DEV_INFO_STRUCT dev_info;
-extern uint16_t        rf_linking_time;
-extern uint32_t        no_act_time;
 extern bool            f_goto_sleep;
 extern bool            f_goto_deepsleep;
-extern bool            f_wakeup_prepare;
-extern bool            f_rf_sleep;
-extern uint16_t        link_timeout;
-extern uint16_t        link_timeout_rf24;
-extern uint16_t        sleep_time_delay;
-extern uint32_t        deep_sleep_delay;
 
 void set_side_rgb(uint8_t side, uint8_t r, uint8_t g, uint8_t b);
-void rgb_matrix_update_pwm_buffers(void);
+void side_rgb_refresh(void);
 
 void signal_sleep(uint8_t r, uint8_t g, uint8_t b) {
     // Visual cue for sleep on side LED.
-
     pwr_led_on();
     wait_ms(50); // give some time to ensure LED powers on.
     set_side_rgb(3, r, g, b);
-    rgb_matrix_update_pwm_buffers();
+    side_rgb_refresh();
     wait_ms(300);
 }
 
@@ -74,7 +63,7 @@ void sleep_handle(void) {
     if (timer_elapsed32(delay_step_timer) < 50) return;
         delay_step_timer = timer_read32();
 
-    if (!user_config.sleep_enable || sleep_time_delay >= (100 * 360) || f_rf_sleep)
+    if (user_config.sleep_enable % 2 != 1 || f_rf_sleep)
         f_goto_deepsleep = 0;
     else if (no_act_time >= deep_sleep_delay && dev_info.link_mode == LINK_RF_24)
         f_goto_deepsleep = 1;
@@ -82,20 +71,12 @@ void sleep_handle(void) {
         f_goto_deepsleep = 1;
 
     if (f_goto_deepsleep != 0) {
-        if (dev_info.rf_charge & 0x01) {
-            f_goto_deepsleep = 0;
-        } else if (dev_info.link_mode == LINK_USB && USB_DRIVER.state == USB_SUSPENDED) {
-            f_goto_deepsleep = 0;
-        }
-
-        if (f_goto_deepsleep != 0) {
-            f_goto_deepsleep = 0;
-            f_goto_sleep     = 0;
-            f_wakeup_prepare = 1;
-            f_rf_sleep       = 1;
-            deep_sleep_handle();
-            return;
-        }
+        f_goto_deepsleep = 0;
+        f_goto_sleep     = 0;
+        f_wakeup_prepare = 1;
+        f_rf_sleep       = 1;
+        deep_sleep_handle();
+        return;
     }
 
     // sleep process
@@ -104,11 +85,9 @@ void sleep_handle(void) {
         rf_disconnect_time = 0;
         rf_linking_time    = 0;
 
-        if(user_config.sleep_enable) {
+        if(user_config.sleep_enable != 0) {
             // Visual cue for sleep on side LED.
-            if (sleep_time_delay >= (100 * 360)) {
-                signal_sleep(0x00, 0x00, 0x80);
-            }
+            if (user_config.sleep_enable == 2) signal_sleep(0x00, 0x00, 0x80);
             enter_light_sleep();
         }
 
@@ -117,10 +96,10 @@ void sleep_handle(void) {
 
     // wakeup check
     if (f_wakeup_prepare) {
-        if (no_act_time < 3) { // activity wake up
+        if (no_act_time <= 5) { // activity wake up
             f_wakeup_prepare = 0;
-	    f_rf_sleep       = 0;
-            if (user_config.sleep_enable) exit_light_sleep();
+            f_rf_sleep       = 0;
+            if (user_config.sleep_enable != 0) exit_light_sleep(false);
         }
     }
 
@@ -136,9 +115,9 @@ void sleep_handle(void) {
         } else {
             usb_suspend_debounce = 0;
         }
-    } else if (no_act_time >= sleep_time_delay) {
+    } else if (no_act_time >= sleep_time_delay && user_config.sleep_enable != 0) {
         f_goto_sleep     = 1;
-    } else if ((dev_info.link_mode == LINK_RF_24 && rf_linking_time >= link_timeout_rf24) || rf_linking_time >= link_timeout) {
+    } else if (rf_linking_time >= (dev_info.link_mode == LINK_RF_24 ? (link_timeout / 4) : link_timeout)) {
         f_goto_deepsleep    = 1;
         f_goto_sleep        = 1;
     } else if (dev_info.rf_state == RF_DISCONNECT) {
