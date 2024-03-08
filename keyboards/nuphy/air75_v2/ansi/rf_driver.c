@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "rf_queue.h"
 
 /* Variable declaration */
-extern DEV_INFO_STRUCT dev_info;
+// extern DEV_INFO_STRUCT dev_info;
 extern report_buffer_t byte_report_buff;
 extern report_buffer_t bit_report_buff;
 extern rf_queue_t      rf_queue;
@@ -147,17 +147,10 @@ static void rf_send_mouse(report_mouse_t *report) {
     send_or_queue(&rpt);
 }
 
-static void rf_send_extra_helper(uint8_t cmd, report_extra_t *report) {
-    report_buffer_t rpt = {.cmd = cmd, .length = 2};
+static void rf_send_extra(report_extra_t *report) {
+    uint8_t cmd_rpt = report->report_id == REPORT_ID_CONSUMER ? CMD_RPT_CONSUME : CMD_RPT_SYS;
+    report_buffer_t rpt = {.cmd = cmd_rpt, .length = 2};
     memcpy(rpt.buffer, (uint8_t *)(&report->usage), rpt.length);
     send_or_queue(&rpt);
-}
-
-static void rf_send_extra(report_extra_t *report) {
-    if (report->report_id == REPORT_ID_CONSUMER) {
-        rf_send_extra_helper(CMD_RPT_CONSUME, report);
-    } else if (report->report_id == REPORT_ID_SYSTEM) {
-        rf_send_extra_helper(CMD_RPT_SYS, report);
-    }
 }
 

@@ -143,6 +143,40 @@ typedef struct
     uint8_t retain2;
 } user_config_t;
 
+extern DEV_INFO_STRUCT    dev_info;
+extern user_config_t      user_config;
+extern report_keyboard_t *keyboard_report;
+extern report_nkro_t     *nkro_report;
+
+extern uint8_t            rf_blink_cnt;
+extern uint16_t           rf_link_show_time;
+extern uint16_t           side_led_last_act;
+
+extern bool               f_bat_hold;
+extern bool               f_sys_show;
+extern bool               f_sleep_show;
+extern bool               f_rf_sw_press;
+extern bool               f_dev_reset_press;
+extern bool               f_bat_num_show;
+extern bool               f_rgb_test_press;
+
+extern uint8_t            rf_sw_temp;
+extern uint16_t           rf_sw_press_delay;
+extern uint16_t           rf_linking_time;
+extern bool               f_rf_new_adv_ok;
+
+extern uint32_t           no_act_time;
+extern uint16_t           sleep_time_delay;
+extern uint32_t           deep_sleep_delay;
+extern uint16_t           link_timeout;
+extern bool               f_rf_sleep;
+extern bool               f_wakeup_prepare;
+
+extern uint16_t           numlock_timer;
+extern uint32_t           eeprom_update_timer;
+extern bool               rgb_update;
+extern bool               side_update;
+
 void    dev_sts_sync(void);
 void    rf_uart_init(void);
 void    rf_device_init(void);
@@ -153,7 +187,7 @@ void    side_speed_control(uint8_t dir);
 void    side_light_control(uint8_t dir);
 void    side_colour_control(uint8_t dir);
 void    side_mode_control(uint8_t dir);
-void    side_one_control(uint8_t dir);
+void    side_one_control(void);
 void    side_led_show(void);
 void    sleep_handle(void);
 void    bat_led_close(void);

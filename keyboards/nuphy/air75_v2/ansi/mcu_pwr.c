@@ -15,14 +15,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "user_kb.h"
 #include "mcu_stm32f0xx.h"
 #include "mcu_pwr.h"
+#include "hal_usb.h"
+#include "usb_main.h"
+#include "hal_lld.h"
 
 //------------------------------------------------
-extern DEV_INFO_STRUCT dev_info;
+// extern DEV_INFO_STRUCT dev_info;
 
 static bool f_usb_deinit         = 0;
 static bool side_led_powered_off = 0;
 static bool rgb_led_powered_off  = 0;
-static bool tim6_enabled         = false;
 
 static bool rgb_led_on  = 0;
 static bool side_led_on = 0;
@@ -30,6 +32,10 @@ static bool side_led_on = 0;
 void clear_report_buffer(void);
 
 #if (MCU_SLEEP_ENABLE)
+
+// Pin definitions
+static const pin_t row_pins[MATRIX_ROWS] = MATRIX_ROW_PINS;
+static const pin_t col_pins[MATRIX_COLS] = MATRIX_COL_PINS;
 
 /** ================================================================
  * @brief  Turn off USB
@@ -63,8 +69,6 @@ void m_deinit_usb_072(void) {
  * @brief   Low Power mode
  *
  ================================================================*/
-#include "hal_usb.h"
-#include "usb_main.h"
 void SYSCFG_EXTILineConfig(uint8_t EXTI_PortSourceGPIOx, uint8_t EXTI_PinSourcex) {
     uint32_t tmp = 0x00;
 
@@ -73,14 +77,27 @@ void SYSCFG_EXTILineConfig(uint8_t EXTI_PortSourceGPIOx, uint8_t EXTI_PinSourcex
     SYSCFG->EXTICR[EXTI_PinSourcex >> 0x02] |= (((uint32_t)EXTI_PortSourceGPIOx) << (0x04 * (EXTI_PinSourcex & (uint8_t)0x03)));
 }
 
-#include "hal_lld.h"
 #define EXTI_PortSourceGPIOA ((uint8_t)0x00)
 #define EXTI_PortSourceGPIOB ((uint8_t)0x01)
 #define EXTI_PortSourceGPIOC ((uint8_t)0x02)
 #define EXTI_PortSourceGPIOD ((uint8_t)0x03)
+
 #endif
 
-#include "usb_main.h"
+/**
+ * @brief  Light sleep by powering off LEDs.
+ * @note This is Nuphy's "open sourced" sleep logic. It's not deep sleep.
+ */
+void enter_light_sleep(void) {
+    if (dev_info.rf_state == RF_CONNECT && !f_rf_sleep)
+        uart_send_cmd(CMD_SET_CONFIG, 5, 5);
+    else
+        uart_send_cmd(CMD_SLEEP, 5, 5);
+
+    led_pwr_sleep_handle();
+    clear_report_buffer();
+}
+
 /**
  * @brief  Enter deep sleep
  * @note This is Nuphy's un-released logic with some cleanup/refactoring
@@ -88,10 +105,7 @@ void SYSCFG_EXTILineConfig(uint8_t EXTI_PortSourceGPIOx, uint8_t EXTI_PinSourcex
  */
 void enter_deep_sleep(void) {
     //------------------------ RF to sleep
-    uart_send_cmd(CMD_SLEEP, 5, 5);
-
-    led_pwr_sleep_handle();
-    clear_report_buffer();
+    enter_light_sleep();
 
 #if (MCU_SLEEP_ENABLE)
     //------------------------ Turn off USB if not used
@@ -100,52 +114,13 @@ void enter_deep_sleep(void) {
         m_deinit_usb_072();
     }
 
-    // Close timer
-    if (tim6_enabled) TIM_Cmd(TIM6, DISABLE);
-
-    //------------------------ Configure WakeUp Key
-    setPinOutput(KCOL_0);
-    writePinHigh(KCOL_0);
-    setPinOutput(KCOL_1);
-    writePinHigh(KCOL_1);
-    setPinOutput(KCOL_2);
-    writePinHigh(KCOL_2);
-    setPinOutput(KCOL_3);
-    writePinHigh(KCOL_3);
-    setPinOutput(KCOL_4);
-    writePinHigh(KCOL_4);
-    setPinOutput(KCOL_5);
-    writePinHigh(KCOL_5);
-    setPinOutput(KCOL_6);
-    writePinHigh(KCOL_6);
-    setPinOutput(KCOL_7);
-    writePinHigh(KCOL_7);
-    setPinOutput(KCOL_8);
-    writePinHigh(KCOL_8);
-    setPinOutput(KCOL_9);
-    writePinHigh(KCOL_9);
-    setPinOutput(KCOL_10);
-    writePinHigh(KCOL_10);
-    setPinOutput(KCOL_11);
-    writePinHigh(KCOL_11);
-    setPinOutput(KCOL_12);
-    writePinHigh(KCOL_12);
-    setPinOutput(KCOL_13);
-    writePinHigh(KCOL_13);
-    setPinOutput(KCOL_14);
-    writePinHigh(KCOL_14);
-    setPinOutput(KCOL_15);
-    writePinHigh(KCOL_15);
-    setPinOutput(KCOL_16);
-    writePinHigh(KCOL_16);
-
-    setPinInputLow(KROW_0);
-    setPinInputLow(KROW_1);
-    setPinInputLow(KROW_2);
-    setPinInputLow(KROW_3);
-    setPinInputLow(KROW_4);
-    setPinInputLow(KROW_5);
-
+    for (int i = 0; i < ARRAY_SIZE(col_pins); ++i) {
+        gpio_set_pin_output(col_pins[i]);
+        gpio_write_pin_high(col_pins[i]);
+    }
+    for (int i = 0; i < ARRAY_SIZE(row_pins); ++i) {
+        gpio_set_pin_input_low(row_pins[i]);
+    }
     // Configure interrupt source - all 5 rows of the keyboard.
     SYSCFG_EXTILineConfig(EXTI_PORT_R0, EXTI_PIN_R0);
     SYSCFG_EXTILineConfig(EXTI_PORT_R1, EXTI_PIN_R1);
@@ -172,32 +147,54 @@ void enter_deep_sleep(void) {
     NVIC_InitStructure.NVIC_IRQChannel = EXTI2_3_IRQn;
     NVIC_Init(&NVIC_InitStructure);
 
-    // led_pwr_sleep_handle();
 
-    setPinOutput(DEV_MODE_PIN);
-    writePinLow(DEV_MODE_PIN);
+    gpio_set_pin_output(DEV_MODE_PIN);
+    gpio_write_pin_low(DEV_MODE_PIN);
 
-    setPinOutput(SYS_MODE_PIN);
-    writePinLow(SYS_MODE_PIN);
+    gpio_set_pin_output(SYS_MODE_PIN);
+    gpio_write_pin_low(SYS_MODE_PIN);
 
     // These should be LED pins as well, turning them off.
-    setPinOutput(A7);
-    writePinLow(A7);
-    setPinOutput(DRIVER_SIDE_PIN);
-    writePinLow(DRIVER_SIDE_PIN);
+    gpio_set_pin_output(A7);
+    gpio_write_pin_low(A7);
+    gpio_set_pin_output(DRIVER_SIDE_PIN);
+    gpio_write_pin_low(DRIVER_SIDE_PIN);
 
-    // setPinOutput(NRF_TEST_PIN);
-    // writePinHigh(NRF_TEST_PIN);
-    setPinInputHigh(NRF_TEST_PIN);
+    gpio_set_pin_input_high(NRF_TEST_PIN);
 
-    setPinOutput(NRF_WAKEUP_PIN);
-    writePinHigh(NRF_WAKEUP_PIN);
-
-    // clear_report_buffer();
+    gpio_set_pin_output(NRF_WAKEUP_PIN);
+    gpio_write_pin_high(NRF_WAKEUP_PIN);
 
     // Enter low power mode and wait for interrupt signal
     PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
 #endif
+}
+
+/**
+ * @brief  Power back up LEDs on exiting light sleep.
+ * @note This is Nuphy's "open sourced" wake logic with some modifications. It's not deep sleep.
+ */
+void exit_light_sleep(bool stm32_init) {
+    // Power on LEDs
+    led_pwr_wake_handle();
+    rgb_matrix_set_color(RGB_MATRIX_LED_COUNT-1, 0, 0, 0);
+#if (MCU_SLEEP_ENABLE)
+    // Reinitialize the system clock
+    if (stm32_init) stm32_clock_init();
+#endif
+    // Handshake send to wake RF
+    uart_send_cmd(CMD_HAND, 0, 1);
+    uart_send_cmd(CMD_RF_STS_SYSC, 1, 0);
+
+
+    if (f_usb_deinit || dev_info.link_mode == LINK_USB) {
+        usb_lld_wakeup_host(&USB_DRIVER);
+        restart_usb_driver(&USB_DRIVER);
+        f_usb_deinit = 0;
+    }
+
+    // flag for RF wakeup workload.
+    dev_info.rf_state = RF_WAKE;
 }
 
 /**
@@ -211,66 +208,15 @@ void exit_deep_sleep(void) {
     matrix_init_pins();
 
     // Restore IO to working status
-    setPinInputHigh(DEV_MODE_PIN); // PC0
-    setPinInputHigh(SYS_MODE_PIN); // PC1
+    gpio_set_pin_input_high(DEV_MODE_PIN); // PC0
+    gpio_set_pin_input_high(SYS_MODE_PIN); // PC1
 
     /* Wake RF module */
-    setPinOutput(NRF_WAKEUP_PIN);
-    writePinHigh(NRF_WAKEUP_PIN);
+    gpio_set_pin_output(NRF_WAKEUP_PIN);
+    gpio_write_pin_high(NRF_WAKEUP_PIN);
 
-    // Power on LEDs This is missing from Nuphy's logic.
-    led_pwr_wake_handle();
-    rgb_matrix_set_color(RGB_MATRIX_LED_COUNT-1, 0, 0, 0);
+    exit_light_sleep(true);
 
-    // Reinitialize the system clock
-    stm32_clock_init();
-
-    /* TIM6 enable */
-    if (tim6_enabled) TIM_Cmd(TIM6, ENABLE);
-
-    // Handshake send to wake RF
-    uart_send_cmd(CMD_HAND, 0, 1);
-
-    // Should re-init USB regardless probably if it was deinitialized.
-    if (f_usb_deinit) {
-        usbWakeupHost(&USB_DRIVER);
-        restart_usb_driver(&USB_DRIVER);
-        f_usb_deinit = 0;
-    }
-    // flag for RF wakeup workload.
-    dev_info.rf_state = RF_WAKE;
-}
-
-/**
- * @brief  Light sleep by powering off LEDs.
- * @note This is Nuphy's "open sourced" sleep logic. It's not deep sleep.
- */
-void enter_light_sleep(void) {
-    if (dev_info.rf_state == RF_CONNECT)
-        uart_send_cmd(CMD_SET_CONFIG, 5, 5);
-    else
-        uart_send_cmd(CMD_SLEEP, 5, 5);
-
-    led_pwr_sleep_handle();
-    clear_report_buffer();
-}
-
-/**
- * @brief  Power back up LEDs on exiting light sleep.
- * @note This is Nuphy's "open sourced" wake logic. It's not deep sleep.
- */
-void exit_light_sleep(void) {
-    led_pwr_wake_handle();
-    rgb_matrix_set_color(RGB_MATRIX_LED_COUNT-1, 0, 0, 0);
-    uart_send_cmd(CMD_HAND, 0, 1);
-
-    if (dev_info.link_mode == LINK_USB) {
-        usb_lld_wakeup_host(&USB_DRIVER);
-        restart_usb_driver(&USB_DRIVER);
-    }
-
-    // flag for RF wakeup workload.
-    dev_info.rf_state = RF_WAKE;
 }
 
 void led_pwr_sleep_handle(void) {
@@ -279,11 +225,11 @@ void led_pwr_sleep_handle(void) {
     rgb_led_powered_off  = 0;
 
     // power off leds if they were enabled
-    if (is_rgb_led_on()) {
+    if (rgb_led_on) {
         rgb_led_powered_off = 1;
         pwr_rgb_led_off();
     }
-    if (is_side_led_on()) {
+    if (side_led_on) {
         side_led_powered_off = 1;
         pwr_side_led_off();
     }
@@ -301,43 +247,34 @@ void led_pwr_wake_handle(void) {
 void pwr_rgb_led_off(void) {
     if (!rgb_led_on) return;
     // LED power supply off
-    setPinOutput(DC_BOOST_PIN);
-    writePinLow(DC_BOOST_PIN);
-    setPinInput(DRIVER_LED_CS_PIN);
+    gpio_set_pin_output(DC_BOOST_PIN);
+    gpio_write_pin_low(DC_BOOST_PIN);
+    gpio_set_pin_input(DRIVER_LED_CS_PIN);
     rgb_led_on = 0;
 }
 
 void pwr_rgb_led_on(void) {
     if (rgb_led_on) return;
     // LED power supply on
-    setPinOutput(DC_BOOST_PIN);
-    writePinHigh(DC_BOOST_PIN);
-    setPinOutput(DRIVER_LED_CS_PIN);
-    writePinLow(DRIVER_LED_CS_PIN);
+    gpio_set_pin_output(DC_BOOST_PIN);
+    gpio_write_pin_high(DC_BOOST_PIN);
+    gpio_set_pin_output(DRIVER_LED_CS_PIN);
+    gpio_write_pin_low(DRIVER_LED_CS_PIN);
     rgb_led_on = 1;
 }
 
 void pwr_side_led_off(void) {
     if (!side_led_on) return;
-    setPinInput(DRIVER_SIDE_CS_PIN);
+    gpio_set_pin_input(DRIVER_SIDE_CS_PIN);
     side_led_on = 0;
 }
 
 void pwr_side_led_on(void) {
     if (side_led_on) return;
-    setPinOutput(DRIVER_SIDE_CS_PIN);
-    writePinLow(DRIVER_SIDE_CS_PIN);
+    gpio_set_pin_output(DRIVER_SIDE_CS_PIN);
+    gpio_write_pin_low(DRIVER_SIDE_CS_PIN);
     side_led_on = 1;
 }
-
-bool is_rgb_led_on(void) {
-    return rgb_led_on;
-}
-
-bool is_side_led_on(void) {
-    return side_led_on;
-}
-
 
 #if (MCU_SLEEP_ENABLE)
 /* Nuphy's implementations. */

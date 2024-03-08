@@ -1,5 +1,5 @@
 /*
-Copyright 2023 @ Nuphy <https://nuphy.com/> & adi4086
+Copyright 2023 @ Nuphy <https://nuphy.com/>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,32 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "usb_main.h"
 #include "mcu_pwr.h"
 
-extern bool            f_rf_sw_press;
-extern bool            f_sleep_show;
-extern bool            f_dev_reset_press;
-extern bool            f_bat_num_show;
-extern bool            f_rgb_test_press;
-extern bool            f_bat_hold;
-extern uint32_t        no_act_time;
-extern uint8_t         rf_sw_temp;
-extern uint16_t        rf_sw_press_delay;
-extern uint16_t        rf_linking_time;
-extern uint16_t        sleep_time_delay;
-extern user_config_t   user_config;
-extern DEV_INFO_STRUCT dev_info;
-extern uint16_t        link_timeout;
-extern uint16_t        link_timeout_rf24;
-extern uint32_t        deep_sleep_delay;
-extern uint32_t        uart_rpt_timer;
-extern uint32_t        eeprom_update_timer;
-extern bool            rgb_update;
+uint16_t               numlock_timer = 0;
 
 /* qmk process record */
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
-    no_act_time       = 0;
-    rf_linking_time   = 0;
-    uart_rpt_timer    = timer_read32();  // reset uart repeat timer.
-    static uint16_t   numlock_timer;
+    no_act_time      = 0;
+    rf_linking_time  = 0;
 
     if (!process_record_user(keycode, record)) {
         return false;
@@ -160,7 +140,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case MAC_DND:
             if (record->event.pressed) {
-                    host_system_send(0x9b);
+                host_system_send(0x9b);
             } else {
                 host_system_send(0);
             }
@@ -273,14 +253,14 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case SIDE_1:
             if (record->event.pressed) {
-                side_one_control(1);
+                side_one_control();
             }
             return false;
 
         case RGB_VAI:
             if (record->event.pressed) {
                 rgb_matrix_increase_val_noeeprom();
-                eeprom_update_timer = timer_read32();
+                // eeprom_update_timer = timer_read32();
                 rgb_update = 1;
             }
             return false;
@@ -288,7 +268,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RGB_VAD:
             if (record->event.pressed) {
                 rgb_matrix_decrease_val_noeeprom();
-                eeprom_update_timer = timer_read32();
+                // eeprom_update_timer = timer_read32();
                 rgb_update = 1;
             }
             return false;
@@ -296,7 +276,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RGB_MOD:
             if (record->event.pressed) {
                 rgb_matrix_step_noeeprom();
-                eeprom_update_timer = timer_read32();
+                // eeprom_update_timer = timer_read32();
                 rgb_update = 1;
             }
             return false;
@@ -304,7 +284,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RGB_HUI:
             if (record->event.pressed) {
                 rgb_matrix_increase_hue_noeeprom();
-                eeprom_update_timer = timer_read32();
+                // eeprom_update_timer = timer_read32();
                 rgb_update = 1;
             }
             return false;
@@ -312,7 +292,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RGB_SPI:
             if (record->event.pressed) {
                 rgb_matrix_increase_speed_noeeprom();
-                eeprom_update_timer = timer_read32();
+                // eeprom_update_timer = timer_read32();
                 rgb_update = 1;
             }
             return false;
@@ -320,7 +300,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RGB_SPD:
             if (record->event.pressed) {
                 rgb_matrix_decrease_speed_noeeprom();
-                eeprom_update_timer = timer_read32();
+                // eeprom_update_timer = timer_read32();
                 rgb_update = 1;
             }
             return false;
@@ -336,19 +316,14 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case SLEEP_MODE:
             if (record->event.pressed) {
-                if(user_config.sleep_enable) {
-                    if (sleep_time_delay < (100 * 360) ) {
-                        link_timeout = (100 * 120);
-                        link_timeout_rf24 = (100 * 120);
-                        sleep_time_delay = (100 * 360);
-                    } else {
-                        user_config.sleep_enable = false;
-                    }
-                } else {
-                    link_timeout = (50 + 100 * 59);
-                    link_timeout_rf24 = (100 * 10);
+                user_config.sleep_enable++;
+                if (user_config.sleep_enable > 2) user_config.sleep_enable = 0;
+                if (user_config.sleep_enable == 1) {
+                    link_timeout = (100 * 60 * 1);
                     sleep_time_delay = (100 * 60 * 2);
-                    user_config.sleep_enable = true;
+                } else if (user_config.sleep_enable == 2) {
+                    link_timeout = (100 * 60 * 2);
+                    sleep_time_delay = (100 * 60 * 6);
                 }
                 f_sleep_show       = 1;
                 eeconfig_update_kb_datablock(&user_config);
@@ -379,13 +354,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     unregister_code(KC_INS);
                 }
             } else {
-                if (numlock_timer == 0) {
-                } else if (timer_elapsed(numlock_timer) > TAPPING_TERM) {
-                    numlock_timer = 0;
-                    register_code(KC_NUM);
-                    wait_ms(10);
-                    unregister_code(KC_NUM);
-                } else {
+                if (numlock_timer != 0 && timer_elapsed(numlock_timer) < TAPPING_TERM) {
                     numlock_timer = 0;
                     register_code(KC_INS);
                     wait_ms(10);
