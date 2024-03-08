@@ -496,7 +496,6 @@ void rf_led_show(void) {
 void bat_num_led(uint8_t bat_percent)
 {
     uint8_t r, g, b;
-    char test = RGB_RED;
     uint8_t last_r, last_g, last_b;
     uint8_t bat_pct = bat_percent / 10;
 
