@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "rf_queue.h"
 
 /* Variable declaration */
-// extern DEV_INFO_STRUCT dev_info;
 extern report_buffer_t byte_report_buff;
 extern report_buffer_t bit_report_buff;
 extern rf_queue_t      rf_queue;
@@ -36,6 +35,7 @@ static void    rf_send_extra(report_extra_t *report);
 const host_driver_t rf_host_driver = {rf_keyboard_leds, rf_send_keyboard, rf_send_nkro, rf_send_mouse, rf_send_extra};
 
 /* defined in rf.c */
+void clear_report_buffer(void);
 void uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_size);
 
 /**
@@ -50,13 +50,19 @@ static void send_or_queue(report_buffer_t *report) {
     }
 }
 
+static report_buffer_t make_report_buffer(uint8_t cmd, uint8_t *buff, uint8_t len) {
+    report_buffer_t report = {.cmd = cmd, .length = len};
+    memcpy(report.buffer, buff, len);
+    return report;
+}
+
 /**
  * @brief Uart auto nkey send
  */
 static void uart_auto_nkey_send(uint8_t *now_bit_report, uint8_t size) {
-    static uint8_t bytekb_report_buf[8]    = {0};
-    static uint8_t uart_bit_report_buf[16] = {0};
-    static uint8_t pre_bit_report[16]      = {0};
+    static uint8_t bytekb_report_buf[8] = {0};
+    static uint8_t bitkb_report_buf[16] = {0};
+    static uint8_t pre_bit_report[16]   = {0};
 
     uint8_t i, j, byte_index;
     uint8_t change_mask, offset_mask;
@@ -84,7 +90,7 @@ static void uart_auto_nkey_send(uint8_t *now_bit_report, uint8_t size) {
                         }
                     }
                     if (byte_index >= 8) {
-                        uart_bit_report_buf[i] |= offset_mask;
+                        bitkb_report_buf[i] |= offset_mask;
                         f_bit_send = 1;
                     }
                 } else {
@@ -96,7 +102,7 @@ static void uart_auto_nkey_send(uint8_t *now_bit_report, uint8_t size) {
                         }
                     }
                     if (byte_index >= 8) {
-                        uart_bit_report_buf[i] &= ~offset_mask;
+                        bitkb_report_buf[i] &= ~offset_mask;
                         f_bit_send = 1;
                     }
                 }
@@ -108,17 +114,15 @@ static void uart_auto_nkey_send(uint8_t *now_bit_report, uint8_t size) {
     memcpy(pre_bit_report, now_bit_report, 16);
 
     if (f_byte_send) {
-        report_buffer_t rpt = {.cmd = CMD_RPT_BYTE_KB, .length = 8};
-        memcpy(rpt.buffer, &bytekb_report_buf[0], rpt.length);
-        send_or_queue(&rpt);
-        byte_report_buff = rpt;
+        report_buffer_t rpt_byte = make_report_buffer(CMD_RPT_BYTE_KB, &bytekb_report_buf[0], 8);
+        send_or_queue(&rpt_byte);
+        byte_report_buff = rpt_byte;
     }
 
     if (f_bit_send) {
-        report_buffer_t rpt = {.cmd = CMD_RPT_BIT_KB, .length = 16};
-        memcpy(rpt.buffer, &uart_bit_report_buf[0], rpt.length);
-        send_or_queue(&rpt);
-        bit_report_buff = rpt;
+        report_buffer_t rpt_bit = make_report_buffer(CMD_RPT_BIT_KB, &bitkb_report_buf[0], 16);
+        send_or_queue(&rpt_bit);
+        bit_report_buff = rpt_bit;
     }
 }
 
@@ -128,29 +132,24 @@ static uint8_t rf_keyboard_leds(void) {
 
 static void rf_send_keyboard(report_keyboard_t *report) {
     report->reserved    = 0;
-    report_buffer_t rpt = {.cmd = CMD_RPT_BYTE_KB, .length = 8};
-    memcpy(rpt.buffer, &report->mods, rpt.length);
+    report_buffer_t rpt = make_report_buffer(CMD_RPT_BYTE_KB, &report->mods, 8);
     send_or_queue(&rpt);
     byte_report_buff = rpt;
 }
 
 static void rf_send_nkro(report_nkro_t *report) {
-    // clear current reports to prevent random double repeat keys?
-    memset(&byte_report_buff.cmd, 0, sizeof(report_buffer_t));
-    memset(&bit_report_buff.cmd, 0, sizeof(report_buffer_t));
+    clear_report_buffer();
     uart_auto_nkey_send(&nkro_report->mods, 16); // only need 1 byte mod + 15 byte keys
 }
 
 static void rf_send_mouse(report_mouse_t *report) {
-    report_buffer_t rpt = {.cmd = CMD_RPT_MS, .length = 5};
-    memcpy(rpt.buffer, &report->buttons, rpt.length);
+    report_buffer_t rpt = make_report_buffer(CMD_RPT_MS, &report->buttons, 5);
     send_or_queue(&rpt);
 }
 
 static void rf_send_extra(report_extra_t *report) {
     uint8_t cmd_rpt = report->report_id == REPORT_ID_CONSUMER ? CMD_RPT_CONSUME : CMD_RPT_SYS;
-    report_buffer_t rpt = {.cmd = cmd_rpt, .length = 2};
-    memcpy(rpt.buffer, (uint8_t *)(&report->usage), rpt.length);
+    report_buffer_t rpt = make_report_buffer(cmd_rpt, (uint8_t *)(&report->usage), 2);
     send_or_queue(&rpt);
 }
 

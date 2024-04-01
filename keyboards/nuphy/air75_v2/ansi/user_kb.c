@@ -28,8 +28,6 @@ DEV_INFO_STRUCT dev_info = {
     .rf_state   = RF_IDLE,
 };
 bool f_bat_hold         = 0;
-bool f_sys_show         = 0;
-bool f_sleep_show       = 0;
 bool f_send_channel     = 0;
 bool f_dial_sw_init_ok  = 0;
 bool f_rf_sw_press      = 0;
@@ -46,6 +44,8 @@ uint32_t       no_act_time           = 0;
 uint16_t       dev_reset_press_delay = 0;
 uint16_t       rf_sw_press_delay     = 0;
 uint16_t       rgb_test_press_delay  = 0;
+uint32_t       sys_show_timer        = 0;
+uint32_t       sleep_show_timer      = 0;
 
 uint16_t       rgb_led_last_act      = 0;
 uint16_t       side_led_last_act     = 0;
@@ -55,25 +55,12 @@ host_driver_t *m_host_driver         = 0;
 uint16_t       link_timeout          = (100 * 60 * 1);
 uint16_t       sleep_time_delay      = (100 * 60 * 2);
 uint32_t       deep_sleep_delay      = (100 * 60 * 6);
+
 uint32_t       eeprom_update_timer   = 0;
-bool           side_update           = 0;
+bool           user_update           = 0;
 bool           rgb_update            = 0;
 
 extern host_driver_t      rf_host_driver;
-
-/*
-extern bool               f_rf_new_adv_ok;
-extern bool               f_wakeup_prepare;
-extern report_keyboard_t *keyboard_report;
-extern report_nkro_t     *nkro_report;
-extern uint8_t            side_mode;
-extern uint8_t            side_light;
-extern uint8_t            side_speed;
-extern uint8_t            side_rgb;
-extern uint8_t            side_colour;
-extern uint8_t            side_one;
-extern uint16_t           numlock_timer;
-*/
 
 /**
  * @brief  gpio initial.
@@ -99,6 +86,14 @@ void gpio_init(void) {
     gpio_set_pin_input_high(SYS_MODE_PIN);
 }
 
+void set_link_mode(void) {
+    f_rf_sw_press = 0;
+
+    dev_info.link_mode   = rf_sw_temp;
+    dev_info.rf_channel  = rf_sw_temp;
+    dev_info.ble_channel = rf_sw_temp;
+}
+
 /**
  * @brief  long press key process.
  */
@@ -111,13 +106,9 @@ void long_press_key(void) {
     // Open a new RF device
     if (f_rf_sw_press) {
         rf_sw_press_delay++;
+        
         if (rf_sw_press_delay >= RF_LONG_PRESS_DELAY) {
-            f_rf_sw_press = 0;
-
-            dev_info.link_mode   = rf_sw_temp;
-            dev_info.rf_channel  = rf_sw_temp;
-            dev_info.ble_channel = rf_sw_temp;
-
+            set_link_mode();
             uint8_t timeout = 5;
             while (timeout--) {
                 uart_send_cmd(CMD_NEW_ADV, 0, 1);
@@ -136,15 +127,15 @@ void long_press_key(void) {
         if (dev_reset_press_delay >= DEV_RESET_PRESS_DELAY) {
             f_dev_reset_press = 0;
 
+            if (dev_info.link_mode != LINK_RF_24) {
+                dev_info.ble_channel = LINK_BT_1;
+                dev_info.rf_channel  = LINK_BT_1;
+            }
+
             if (dev_info.link_mode != LINK_USB) {
                 if (dev_info.link_mode != LINK_RF_24) {
                     dev_info.link_mode   = LINK_BT_1;
-                    dev_info.ble_channel = LINK_BT_1;
-                    dev_info.rf_channel  = LINK_BT_1;
                 }
-            } else {
-                dev_info.ble_channel = LINK_BT_1;
-                dev_info.rf_channel  = LINK_BT_1;
             }
 
             uart_send_cmd(CMD_SET_LINK, 10, 10);
@@ -157,12 +148,15 @@ void long_press_key(void) {
             eeconfig_init();
             device_reset_show();
             device_reset_init();
+            eeconfig_update_rgb_matrix_default();
 
             if (dev_info.sys_sw_state == SYS_SW_MAC) {
                 default_layer_set(1 << 0);
+                layer_move(0);
                 keymap_config.nkro = 0;
             } else {
                 default_layer_set(1 << 2);
+                layer_move(2);
                 keymap_config.nkro = 1;
             }
         }
@@ -194,27 +188,22 @@ void long_press_key(void) {
  * @brief  Release all keys, clear keyboard report.
  */
 void break_all_key(void) {
-    bool    nkro_temp = keymap_config.nkro;
+    bool nkro_temp = keymap_config.nkro;
 
+    // break keyboard mode
     clear_weak_mods();
     clear_mods();
     clear_keyboard();
-
-    // break nkro key
-    keymap_config.nkro = 1;
-    memset(nkro_report, 0, sizeof(report_nkro_t));
-    host_nkro_send(nkro_report);
     wait_ms(10);
 
-    // break byte key
-    keymap_config.nkro = 0;
-    memset(keyboard_report, 0, sizeof(report_keyboard_t));
-    host_keyboard_send(keyboard_report);
+    // break other keyboard mode
+    keymap_config.nkro = !keymap_config.nkro;
+    clear_keyboard();
     wait_ms(10);
 
     keymap_config.nkro = nkro_temp;
-    void clear_report_buffer(void);
-    clear_report_buffer();
+    void clear_report_buffer_and_queue(void);
+    clear_report_buffer_and_queue();
 }
 
 /**
@@ -223,7 +212,7 @@ void break_all_key(void) {
  */
 void switch_dev_link(uint8_t mode) {
     if (mode > LINK_USB) return;
-
+    no_act_time = 0;
     break_all_key();
 
     dev_info.link_mode = mode;
@@ -249,8 +238,8 @@ uint8_t dial_read(void) {
     gpio_set_pin_input_high(DEV_MODE_PIN);
     gpio_set_pin_input_high(SYS_MODE_PIN);
 
-    if (readPin(DEV_MODE_PIN)) dial_scan |= 0X01;
-    if (readPin(SYS_MODE_PIN)) dial_scan |= 0X02;
+    if (gpio_read_pin(DEV_MODE_PIN)) dial_scan |= 0X01;
+    if (gpio_read_pin(SYS_MODE_PIN)) dial_scan |= 0X02;
 
     return dial_scan;
 }
@@ -274,19 +263,17 @@ void dial_set(uint8_t dial_scan, bool led_sys_show) {
 
     if (dial_scan & 0x02) {
         if (dev_info.sys_sw_state != SYS_SW_MAC) {
-            if (led_sys_show) f_sys_show = 1;
+            if (led_sys_show) sys_show_timer = timer_read32();
             default_layer_set(1 << 0);
             dev_info.sys_sw_state = SYS_SW_MAC;
             keymap_config.nkro    = 0;
-            break_all_key();
         }
     } else {
         if (dev_info.sys_sw_state != SYS_SW_WIN) {
-            if (led_sys_show) f_sys_show = 1;
+            if (led_sys_show) sys_show_timer = timer_read32();
             default_layer_set(1 << 2);
             dev_info.sys_sw_state = SYS_SW_WIN;
             keymap_config.nkro    = 1;
-            break_all_key();
         }
     }
 }
@@ -314,7 +301,7 @@ void dial_sw_scan(void) {
         rf_linking_time = 0;
 
         dial_save         = dial_scan;
-        debounce          = 25;
+        debounce          = 20;
         f_dial_sw_init_ok = 0;
         return;
     } else if (debounce) {
@@ -338,12 +325,12 @@ void dial_sw_scan(void) {
  * @brief  power on scan dial switch.
  */
 void dial_sw_fast_scan(void) {
-    uint8_t         dial_scan       = 0;
-    uint8_t         dial_check       = 0xf0;
-    uint8_t         debounce         = 0;
+    uint8_t         dial_scan   = 0;
+    uint8_t         dial_check  = 0xf0;
+    uint8_t         debounce    = 0;
 
     // Debounce to get a stable state
-    for (debounce = 0; debounce < 10; debounce++) {
+    for (debounce = 0; debounce < 5; debounce++) {
         dial_scan       = 0;
         dial_scan       = dial_read();
         if (dial_check != dial_scan) {
@@ -389,7 +376,7 @@ void timer_pro(void) {
  */
 void load_eeprom_data(void) {
     eeconfig_read_kb_datablock(&user_config);
-    if (user_config.default_brightness_flag != 0xA5) {
+    if (user_config.init_layer != 0xA5) {
         user_config_reset();
     }
 }
@@ -399,13 +386,13 @@ void load_eeprom_data(void) {
  */
 void delay_update_eeprom_data(void) {
     if (eeprom_update_timer == 0) {
-        if (side_update || rgb_update) eeprom_update_timer = timer_read32();
-	return;
+        if (user_update || rgb_update) eeprom_update_timer = timer_read32();
+        return;
     }
     if (timer_elapsed32(eeprom_update_timer) < (1000 * 40)) return;
-    if (side_update) {
+    if (user_update) {
         eeconfig_update_kb_datablock(&user_config);
-        side_update         = 0;
+        user_update         = 0;
     }
     if (rgb_update) {
         eeconfig_update_rgb_matrix();
@@ -419,16 +406,15 @@ void delay_update_eeprom_data(void) {
  */
 void user_config_reset(void) {
     /* first power on, set rgb matrix brightness at middle level*/
-    // rgb_matrix_sethsv(RGB_HUE_INIT, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
 
-    user_config.default_brightness_flag = 0xA5;
+    user_config.init_layer              = 0xA5;
     user_config.ee_side_mode            = 0;
     user_config.ee_side_light           = 1;
     user_config.ee_side_speed           = 2;
     user_config.ee_side_rgb             = 1;
     user_config.ee_side_colour          = 0;
     user_config.ee_side_one             = 0;
-    user_config.sleep_enable            = 1;
+    user_config.sleep_mode              = 1;
     eeconfig_update_kb_datablock(&user_config);
 }
 

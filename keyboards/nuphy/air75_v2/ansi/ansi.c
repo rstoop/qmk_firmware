@@ -56,12 +56,8 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     break_all_key();
                 }
             } else if (f_rf_sw_press) {
-                f_rf_sw_press = 0;
-
                 if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
-                    dev_info.link_mode   = rf_sw_temp;
-                    dev_info.rf_channel  = rf_sw_temp;
-                    dev_info.ble_channel = rf_sw_temp;
+                    set_link_mode();
                     uart_send_cmd(CMD_SET_LINK, 10, 20);
                 }
             }
@@ -75,12 +71,8 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     break_all_key();
                 }
             } else if (f_rf_sw_press) {
-                f_rf_sw_press = 0;
-
                 if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
-                    dev_info.link_mode   = rf_sw_temp;
-                    dev_info.rf_channel  = rf_sw_temp;
-                    dev_info.ble_channel = rf_sw_temp;
+                    set_link_mode();
                     uart_send_cmd(CMD_SET_LINK, 10, 20);
                 }
             }
@@ -94,12 +86,8 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     break_all_key();
                 }
             } else if (f_rf_sw_press) {
-                f_rf_sw_press = 0;
-
                 if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
-                    dev_info.link_mode   = rf_sw_temp;
-                    dev_info.rf_channel  = rf_sw_temp;
-                    dev_info.ble_channel = rf_sw_temp;
+                    set_link_mode();
                     uart_send_cmd(CMD_SET_LINK, 10, 20);
                 }
             }
@@ -113,12 +101,8 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     break_all_key();
                 }
             } else if (f_rf_sw_press) {
-                f_rf_sw_press = 0;
-
                 if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
-                    dev_info.link_mode   = rf_sw_temp;
-                    dev_info.rf_channel  = rf_sw_temp;
-                    dev_info.ble_channel = rf_sw_temp;
+                    set_link_mode();
                     uart_send_cmd(CMD_SET_LINK, 10, 20);
                 }
             }
@@ -126,14 +110,8 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case MAC_VOICE:
             if (record->event.pressed) {
-                if (dev_info.sys_sw_state == SYS_SW_MAC) {
-                    host_consumer_send(0xcf);
-                } else {
-                    register_code(KC_F5);
-                    wait_ms(10);
-                    unregister_code(KC_F5);
-                }
-            } else if (dev_info.sys_sw_state == SYS_SW_MAC) {
+                host_consumer_send(0xcf);
+            } else {
                 host_consumer_send(0);
             }
             return false;
@@ -196,7 +174,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case PRT_AREA:
+	case PRT_AREA:
             if (record->event.pressed) {
                 if (dev_info.sys_sw_state == SYS_SW_MAC) {
                     register_code(KC_LGUI);
@@ -260,7 +238,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RGB_VAI:
             if (record->event.pressed) {
                 rgb_matrix_increase_val_noeeprom();
-                // eeprom_update_timer = timer_read32();
                 rgb_update = 1;
             }
             return false;
@@ -268,7 +245,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RGB_VAD:
             if (record->event.pressed) {
                 rgb_matrix_decrease_val_noeeprom();
-                // eeprom_update_timer = timer_read32();
                 rgb_update = 1;
             }
             return false;
@@ -276,7 +252,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RGB_MOD:
             if (record->event.pressed) {
                 rgb_matrix_step_noeeprom();
-                // eeprom_update_timer = timer_read32();
                 rgb_update = 1;
             }
             return false;
@@ -284,7 +259,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RGB_HUI:
             if (record->event.pressed) {
                 rgb_matrix_increase_hue_noeeprom();
-                // eeprom_update_timer = timer_read32();
                 rgb_update = 1;
             }
             return false;
@@ -292,7 +266,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RGB_SPI:
             if (record->event.pressed) {
                 rgb_matrix_increase_speed_noeeprom();
-                // eeprom_update_timer = timer_read32();
                 rgb_update = 1;
             }
             return false;
@@ -300,7 +273,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RGB_SPD:
             if (record->event.pressed) {
                 rgb_matrix_decrease_speed_noeeprom();
-                // eeprom_update_timer = timer_read32();
                 rgb_update = 1;
             }
             return false;
@@ -316,18 +288,17 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case SLEEP_MODE:
             if (record->event.pressed) {
-                user_config.sleep_enable++;
-                if (user_config.sleep_enable > 2) user_config.sleep_enable = 0;
-                if (user_config.sleep_enable == 1) {
-                    link_timeout = (100 * 60 * 1);
+                user_config.sleep_mode++;
+                if (user_config.sleep_mode == 1) {
+                    link_timeout     = (100 * 60 * 1);
                     sleep_time_delay = (100 * 60 * 2);
-                } else if (user_config.sleep_enable == 2) {
-                    link_timeout = (100 * 60 * 2);
+                } else if (user_config.sleep_mode == 2) {
+                    link_timeout     = (100 * 60 * 2);
                     sleep_time_delay = (100 * 60 * 6);
-                }
-                f_sleep_show       = 1;
+                } else user_config.sleep_mode = 0;
+                sleep_show_timer = timer_read32();
                 eeconfig_update_kb_datablock(&user_config);
-            }
+            } 
             return false;
 
         case BAT_SHOW:
@@ -363,6 +334,14 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
+        case SLEEP_NOW:
+            if (record->event.pressed) {
+                if (user_config.sleep_mode == 1) f_goto_deepsleep  = 1;
+                else if (user_config.sleep_mode == 2) f_goto_sleep = 1;
+            }
+            return false;
+        
+
         default:
             return true;
     }
@@ -375,7 +354,7 @@ bool rgb_matrix_indicators_kb(void) {
     }
 
     if(f_bat_num_show) {
-        num_led_show();
+	bat_num_led();
     }
 
     // power down unused LEDs
@@ -391,8 +370,8 @@ void keyboard_post_init_kb(void) {
     rf_device_init();
 
     break_all_key();
-    dial_sw_fast_scan();
     load_eeprom_data();
+    dial_sw_fast_scan();
     keyboard_post_init_user();
 }
 
@@ -408,11 +387,11 @@ void housekeeping_task_kb(void) {
 
     long_press_key();
 
-    dial_sw_scan();
-
     side_led_show();
 
     delay_update_eeprom_data();
 
     sleep_handle();
+
+    dial_sw_scan();
 }

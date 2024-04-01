@@ -20,16 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "hal_lld.h"
 
 //------------------------------------------------
-// extern DEV_INFO_STRUCT dev_info;
 
 static bool f_usb_deinit         = 0;
-static bool side_led_powered_off = 0;
-static bool rgb_led_powered_off  = 0;
 
 static bool rgb_led_on  = 0;
 static bool side_led_on = 0;
 
-void clear_report_buffer(void);
+void clear_report_buffer_and_queue(void);
 
 #if (MCU_SLEEP_ENABLE)
 
@@ -89,13 +86,12 @@ void SYSCFG_EXTILineConfig(uint8_t EXTI_PortSourceGPIOx, uint8_t EXTI_PinSourcex
  * @note This is Nuphy's "open sourced" sleep logic. It's not deep sleep.
  */
 void enter_light_sleep(void) {
-    if (dev_info.rf_state == RF_CONNECT && !f_rf_sleep)
-        uart_send_cmd(CMD_SET_CONFIG, 5, 5);
-    else
+    uart_send_cmd(CMD_SET_CONFIG, 5, 5);
+    if ((dev_info.link_mode == LINK_RF_24 && f_rf_sleep) || dev_info.rf_state != RF_CONNECT)
         uart_send_cmd(CMD_SLEEP, 5, 5);
 
     led_pwr_sleep_handle();
-    clear_report_buffer();
+    clear_report_buffer_and_queue();
 }
 
 /**
@@ -160,12 +156,18 @@ void enter_deep_sleep(void) {
     gpio_set_pin_output(DRIVER_SIDE_PIN);
     gpio_write_pin_low(DRIVER_SIDE_PIN);
 
+    // skip RF sleep
+    /*
     gpio_set_pin_input_high(NRF_TEST_PIN);
 
     gpio_set_pin_output(NRF_WAKEUP_PIN);
     gpio_write_pin_high(NRF_WAKEUP_PIN);
+    */
+    
 
     // Enter low power mode and wait for interrupt signal
+    wait_ms(2000);
+    break_all_key();
     PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
 #endif
 }
@@ -177,15 +179,12 @@ void enter_deep_sleep(void) {
 void exit_light_sleep(bool stm32_init) {
     // Power on LEDs
     led_pwr_wake_handle();
-    rgb_matrix_set_color(RGB_MATRIX_LED_COUNT-1, 0, 0, 0);
 #if (MCU_SLEEP_ENABLE)
     // Reinitialize the system clock
     if (stm32_init) stm32_clock_init();
 #endif
     // Handshake send to wake RF
     uart_send_cmd(CMD_HAND, 0, 1);
-    uart_send_cmd(CMD_RF_STS_SYSC, 1, 0);
-
 
     if (f_usb_deinit || dev_info.link_mode == LINK_USB) {
         usb_lld_wakeup_host(&USB_DRIVER);
@@ -203,45 +202,31 @@ void exit_light_sleep(bool stm32_init) {
  *       This is mostly Nuphy's unreleased logic with cleanup/refactoring by me.
  */
 void exit_deep_sleep(void) {
+
     // Matrix initialization
     extern void matrix_init_pins(void);
     matrix_init_pins();
+ 
+    /* Wake RF module */
+    gpio_set_pin_output(NRF_WAKEUP_PIN);
+    gpio_write_pin_high(NRF_WAKEUP_PIN);
+
 
     // Restore IO to working status
     gpio_set_pin_input_high(DEV_MODE_PIN); // PC0
     gpio_set_pin_input_high(SYS_MODE_PIN); // PC1
 
-    /* Wake RF module */
-    gpio_set_pin_output(NRF_WAKEUP_PIN);
-    gpio_write_pin_high(NRF_WAKEUP_PIN);
-
     exit_light_sleep(true);
-
 }
 
 void led_pwr_sleep_handle(void) {
-    // reset the flags.
-    side_led_powered_off = 0;
-    rgb_led_powered_off  = 0;
-
-    // power off leds if they were enabled
-    if (rgb_led_on) {
-        rgb_led_powered_off = 1;
-        pwr_rgb_led_off();
-    }
-    if (side_led_on) {
-        side_led_powered_off = 1;
-        pwr_side_led_off();
-    }
+    pwr_rgb_led_off();
+    pwr_side_led_off();
 }
 
 void led_pwr_wake_handle(void) {
-    if (rgb_led_powered_off) {
-        pwr_rgb_led_on();
-    }
-    if (side_led_powered_off) {
-        pwr_side_led_on();
-    }
+    pwr_rgb_led_on();
+    pwr_side_led_on();
 }
 
 void pwr_rgb_led_off(void) {
@@ -260,6 +245,7 @@ void pwr_rgb_led_on(void) {
     gpio_write_pin_high(DC_BOOST_PIN);
     gpio_set_pin_output(DRIVER_LED_CS_PIN);
     gpio_write_pin_low(DRIVER_LED_CS_PIN);
+    rgb_matrix_set_color(RGB_MATRIX_LED_COUNT, 0, 0, 0);
     rgb_led_on = 1;
 }
 
@@ -273,6 +259,7 @@ void pwr_side_led_on(void) {
     if (side_led_on) return;
     gpio_set_pin_output(DRIVER_SIDE_CS_PIN);
     gpio_write_pin_low(DRIVER_SIDE_CS_PIN);
+    flush_side_leds = true;
     side_led_on = 1;
 }
 

@@ -223,6 +223,11 @@
 			"name": "NumLock\nIns",
 			"title": "NumLock on hold | Ins",
 			"shortName": "Num_Ins"
-		}
+		},
+                {
+                        "name": "Sleep\nTrigger",
+                        "title": "Trigger Sleep",
+                        "shortName": "Sleep_Trg"
+                }
 	]
 }

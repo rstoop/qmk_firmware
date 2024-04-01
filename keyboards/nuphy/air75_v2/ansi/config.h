@@ -41,15 +41,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define NO_PRINT
 #endif // !NO_PRINT
 
-// #define TAP_CODE_DELAY                      10
-// #define DYNAMIC_KEYMAP_LAYER_COUNT          8
 #define DYNAMIC_KEYMAP_MACRO_DELAY          8
 
-#define EECONFIG_KB_DATA_SIZE               10
+#define EECONFIG_KB_DATA_SIZE               10 
 #define MCU_SLEEP_ENABLE                    1
 #define GPIO_INPUT_PIN_DELAY                1
+#define RF_QUEUE_SIZE                       128
 
-// #define RGB_MATRIX_DEFAULT_MODE             RGB_MATRIX_SPLASH
-// #define RGB_HUE_INIT                        95
 #define RGB_MATRIX_DISABLE_KEYCODES
-

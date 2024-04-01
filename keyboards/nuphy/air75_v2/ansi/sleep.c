@@ -22,8 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mcu_pwr.h"
 #include "rf_queue.h"
 
-extern bool            f_goto_sleep;
-extern bool            f_goto_deepsleep;
 
 void set_side_rgb(uint8_t side, uint8_t r, uint8_t g, uint8_t b);
 void side_rgb_refresh(void);
@@ -37,13 +35,11 @@ void signal_sleep(uint8_t r, uint8_t g, uint8_t b) {
     wait_ms(300);
 }
 
+// deep sleep process
 void deep_sleep_handle(void) {
-    break_all_key(); // reset keys before sleeping for new QMK lifecycle to handle on wake.
-
-    signal_sleep(0x00, 0x80, 0x00);
-
+    signal_sleep(0x00, dev_info.link_mode == LINK_RF_24 ? 0x80 : 0x00, dev_info.link_mode == LINK_RF_24 ? 0x00 : 0x80);
     // Sync again before sleeping
-    dev_sts_sync();
+    dev_sts_sync(); 
     enter_deep_sleep(); // puts the board in WFI mode and pauses the MCU
 #if (MCU_SLEEP_ENABLE)
     exit_deep_sleep();  // This gets called when there is an interrupt (wake) event.
@@ -59,48 +55,43 @@ void sleep_handle(void) {
     static uint8_t  usb_suspend_debounce = 0;
     static uint32_t rf_disconnect_time = 0;
 
-    /* 50ms interval */
-    if (timer_elapsed32(delay_step_timer) < 50) return;
-        delay_step_timer = timer_read32();
+    if (user_config.sleep_mode == 0 || USB_ACTIVE) return;
+    if (timer_elapsed32(delay_step_timer) > (60 * 1000)) no_act_time = 0;
 
-    if (user_config.sleep_enable % 2 != 1 || f_rf_sleep)
+    /* 50ms interval */
+    uint16_t check_interval = f_wakeup_prepare ? 20 : 500;
+    if (timer_elapsed32(delay_step_timer) < check_interval) return;
+    delay_step_timer = timer_read32();
+
+    // deep sleep check
+    if (user_config.sleep_mode != 1 || f_rf_sleep)
         f_goto_deepsleep = 0;
-    else if (no_act_time >= deep_sleep_delay && dev_info.link_mode == LINK_RF_24)
-        f_goto_deepsleep = 1;
-    else if (no_act_time >= (5 * deep_sleep_delay))
+    else if (no_act_time >= deep_sleep_delay)
         f_goto_deepsleep = 1;
 
 
     if (f_goto_deepsleep != 0) {
-        f_goto_deepsleep = 0;
-        f_goto_sleep     = 0;
-        f_wakeup_prepare = 1;
-        f_rf_sleep       = 1;
+        f_goto_deepsleep   = 0;
+        f_goto_sleep       = 0;
+        f_wakeup_prepare   = 1;
+        f_rf_sleep         = 1;
         deep_sleep_handle();
         return;
     }
 
     // sleep process
     if (f_goto_sleep) {
-        f_goto_sleep       = 0;
-        rf_disconnect_time = 0;
-        rf_linking_time    = 0;
-
-        if(user_config.sleep_enable != 0) {
-            // Visual cue for sleep on side LED.
-            if (user_config.sleep_enable == 2) signal_sleep(0x00, 0x00, 0x80);
-            enter_light_sleep();
-        }
-
+        f_goto_sleep     = 0;
+        enter_light_sleep();
         f_wakeup_prepare = 1;
     }
 
     // wakeup check
     if (f_wakeup_prepare) {
-        if (no_act_time <= 5) { // activity wake up
+        if (no_act_time <= 10) { // activity wake up
             f_wakeup_prepare = 0;
             f_rf_sleep       = 0;
-            if (user_config.sleep_enable != 0) exit_light_sleep(false);
+	    exit_light_sleep(false);
         }
     }
 
@@ -110,22 +101,24 @@ void sleep_handle(void) {
     if (dev_info.link_mode == LINK_USB) {
         if (USB_DRIVER.state == USB_SUSPENDED) {
             usb_suspend_debounce++;
-            if (usb_suspend_debounce >= 20) {
+            if (usb_suspend_debounce >= 2) {
                 f_goto_sleep = 1;
             }
         } else {
             usb_suspend_debounce = 0;
         }
-    } else if (no_act_time >= sleep_time_delay && user_config.sleep_enable != 0) {
+    } else if (no_act_time >= sleep_time_delay) {
         f_goto_sleep     = 1;
     } else if (rf_linking_time >= (dev_info.link_mode == LINK_RF_24 ? (link_timeout / 4) : link_timeout)) {
-        f_goto_deepsleep    = 1;
-        f_goto_sleep        = 1;
+        f_goto_deepsleep = 1;
+        f_goto_sleep     = 1;
+        rf_linking_time  = 0;
     } else if (dev_info.rf_state == RF_DISCONNECT) {
             rf_disconnect_time++;
-        if (rf_disconnect_time > 5 * 20) {
-            f_goto_deepsleep = 1;
-            f_goto_sleep     = 1;
+        if (rf_disconnect_time > 10 * 2) {
+            f_goto_deepsleep   = 1;
+            f_goto_sleep       = 1;
+            rf_disconnect_time = 0;
         }
     } else if (dev_info.rf_state == RF_CONNECT) {
             rf_disconnect_time = 0;
