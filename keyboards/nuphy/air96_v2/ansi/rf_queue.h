@@ -19,6 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "quantum.h"
 
+#ifndef RF_QUEUE_SIZE
+#define RF_QUEUE_SIZE 64
+#endif
+
 typedef struct {
     uint8_t cmd;
     uint8_t length;

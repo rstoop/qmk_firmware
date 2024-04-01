@@ -99,11 +99,13 @@ typedef enum {
 #define HOST_BLE_TYPE           1
 #define HOST_RF_TYPE            2
 
-#define POWER_DOWN_DELAY        (24)
+#define RF_POWER_DOWN_DELAY     (30)
 
 #define RF_LONG_PRESS_DELAY     30
 #define DEV_RESET_PRESS_DELAY   30
 #define RGB_TEST_PRESS_DELAY    30
+
+#define USB_ACTIVE              ((dev_info.link_mode == LINK_USB && USB_DRIVER.state != USB_SUSPENDED) || (dev_info.link_mode != LINK_USB && dev_info.rf_charge == 0x03))
 
 typedef struct
 {
@@ -131,30 +133,28 @@ typedef struct
 
 typedef struct
 {
-    uint8_t default_brightness_flag;
+    uint8_t init_layer;
     uint8_t ee_side_mode;
     uint8_t ee_side_light;
     uint8_t ee_side_speed;
     uint8_t ee_side_rgb;
     uint8_t ee_side_colour;
     uint8_t ee_side_one;
-    uint8_t sleep_enable;
+    uint8_t sleep_mode;
     uint8_t retain1;
     uint8_t retain2;
 } user_config_t;
 
 extern DEV_INFO_STRUCT    dev_info;
 extern user_config_t      user_config;
-extern report_keyboard_t *keyboard_report;
-extern report_nkro_t     *nkro_report;
 
 extern uint8_t            rf_blink_cnt;
 extern uint16_t           rf_link_show_time;
 extern uint16_t           rgb_led_last_act;
 
 extern bool               f_bat_hold;
-extern bool               f_sys_show;
-extern bool               f_sleep_show;
+extern uint32_t           sys_show_timer;
+extern uint32_t           sleep_show_timer;
 extern bool               f_rf_sw_press;
 extern bool               f_dev_reset_press;
 extern bool               f_bat_num_show;
@@ -171,11 +171,14 @@ extern uint32_t           deep_sleep_delay;
 extern uint16_t           link_timeout;
 extern bool               f_rf_sleep;
 extern bool               f_wakeup_prepare;
+extern bool               f_goto_sleep;
+extern bool               f_goto_deepsleep;
+
 
 extern uint16_t           numlock_timer;
 extern uint32_t           eeprom_update_timer;
 extern bool               rgb_update;
-extern bool               side_update;
+extern bool               user_update;
 
 void    dev_sts_sync(void);
 void    rf_uart_init(void);
@@ -190,8 +193,7 @@ void    side_mode_control(uint8_t dir);
 void    side_one_control(void);
 void    side_led_show(void);
 void    sleep_handle(void);
-void    bat_led_close(void);
-void    num_led_show(void);
+void    bat_num_led(void);
 void    rgb_test_show(void);
 void    gpio_init(void);
 void    long_press_key(void);
@@ -204,4 +206,5 @@ void    load_eeprom_data(void);
 void    delay_update_eeprom_data(void);
 void    user_config_reset(void);
 void    led_power_handle(void);
+void    set_link_mode(void);
 uint8_t uart_send_cmd(uint8_t cmd, uint8_t ack_cnt, uint8_t delayms);

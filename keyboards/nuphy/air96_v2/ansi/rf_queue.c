@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "rf_queue.h"
 
-#define RF_QUEUE_SIZE 64
-
 static uint8_t queue_head = 0;
 static uint8_t queue_tail = 0;
 

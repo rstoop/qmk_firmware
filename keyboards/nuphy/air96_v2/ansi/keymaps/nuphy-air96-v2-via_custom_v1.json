@@ -48,7 +48,7 @@
 					"Cycle All",
 					"Cycle Left/Right",
 					"Cycle Up/Down",
-                    "Rainbow Moving Chevron",
+					"Rainbow Moving Chevron",
 					"Cycle Out/In",
 					"Cycle Out/In Dual",
 					"Cycle Pinwheel",
@@ -223,6 +223,11 @@
 			"name": "NumLock\nIns",
 			"title": "NumLock on hold | Ins",
 			"shortName": "Num_Ins"
+		},
+                {
+			"name": "Sleep\nTrigger",
+			"title": "Trigger Sleep",
+			"shortName": "Sleep_Trg"
 		}
 	]
 }

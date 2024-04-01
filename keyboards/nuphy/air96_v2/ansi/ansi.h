@@ -47,5 +47,6 @@ enum custom_keycodes {
     BAT_SHOW,
     BAT_NUM,
     RGB_TEST,
-    NUMLOCK_INS
+    NUMLOCK_INS,
+    SLEEP_NOW
 };
