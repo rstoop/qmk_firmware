@@ -174,7 +174,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-	case PRT_AREA:
+        case PRT_AREA:
             if (record->event.pressed) {
                 if (dev_info.sys_sw_state == SYS_SW_MAC) {
                     register_code(KC_LGUI);
