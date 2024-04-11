@@ -150,7 +150,6 @@ extern user_config_t      user_config;
 
 extern uint8_t            rf_blink_cnt;
 extern uint16_t           rf_link_show_time;
-extern uint16_t           rgb_led_last_act;
 
 extern bool               f_bat_hold;
 extern uint32_t           sys_show_timer;
@@ -179,6 +178,8 @@ extern uint16_t           numlock_timer;
 extern uint32_t           eeprom_update_timer;
 extern bool               rgb_update;
 extern bool               user_update;
+
+extern bool               is_side_rgb_off(void);
 
 void    dev_sts_sync(void);
 void    rf_uart_init(void);

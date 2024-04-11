@@ -164,8 +164,6 @@ void enter_deep_sleep(void) {
 */
     // Enter low power mode and wait for interrupt signal
     // PWR_EnterSTOPMode(PWR_Regulator_ON, PWR_STOPEntry_WFI);
-    wait_ms(2000);
-    break_all_key();
     PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
 #endif
 }
@@ -245,7 +243,7 @@ void pwr_led_on(void) {
     gpio_write_pin_high(RGB_DRIVER_SDB1);
     gpio_set_pin_output(RGB_DRIVER_SDB2);
     gpio_write_pin_high(RGB_DRIVER_SDB2);
-    rgb_matrix_set_color(RGB_MATRIX_LED_COUNT, 0, 0, 0);
+    rgb_matrix_set_color(RGB_MATRIX_LED_COUNT, 1, 1, 1);
     rgb_led_on = 1;
 }
 

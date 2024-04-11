@@ -84,7 +84,7 @@ bool is_side_rgb_off(void)
     is31fl3733_led_t led;
     for (int i = SIDE_INDEX; i < SIDE_INDEX + 10; i++) {
         memcpy_P(&led, (&g_is31fl3733_leds[i]), sizeof(led));
-        if (driver_buffers[led.driver].pwm_buffer[led.r] != 0 && driver_buffers[led.driver].pwm_buffer[led.g] != 0 && driver_buffers[led.driver].pwm_buffer[led.b] != 0) {
+        if (driver_buffers[led.driver].pwm_buffer[led.r] != 0 || driver_buffers[led.driver].pwm_buffer[led.g] != 0 || driver_buffers[led.driver].pwm_buffer[led.b] != 0) {
             return false;
         }
     }
@@ -92,8 +92,8 @@ bool is_side_rgb_off(void)
 }
 
 void side_rgb_refresh(void) {
-    if (!is_side_rgb_off() && !f_wakeup_prepare) {
-        rgb_led_last_act = 0;
+    if (f_wakeup_prepare) return;
+    if (!is_side_rgb_off() || user_config.ee_side_light > 0) {
         pwr_led_on(); // power on side LED before refresh
     }
 }
@@ -257,7 +257,10 @@ void sys_led_show(void) {
         set_side_rgb(LEFT_SIDE + SYS_MARK, current_rgb.r, current_rgb.g, current_rgb.b);
     }
 
-    if (is_caps_word_on()) rgb_matrix_set_color(CAPS_LED, current_rgb.r, current_rgb.g, current_rgb.b);
+    if (is_caps_word_on()) {
+        pwr_led_on();
+        rgb_matrix_set_color(CAPS_LED, current_rgb.r, current_rgb.g, current_rgb.b);
+    }
 
     if (host_keyboard_led_state().num_lock) {
         current_rgb.r = SIDE_BLINK_LIGHT;
@@ -462,6 +465,7 @@ void rf_led_show(void) {
     //light up corresponding BT/RF key
     if (dev_info.link_mode <= LINK_BT_3) {
         uint8_t my_pos = dev_info.link_mode == LINK_RF_24 ? 23 : (19 + dev_info.link_mode);
+        pwr_led_on();
         rgb_matrix_set_color(my_pos, current_rgb.r, current_rgb.g, current_rgb.b);
     }
 }

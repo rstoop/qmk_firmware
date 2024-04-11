@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define    BREATHE_TAB_LEN     128
 
-#define    SIDE_BRIGHT_MAX     5
+#define    SIDE_BRIGHT_MAX     6
 #define    SIDE_SPEED_MAX      4
 #define    SIDE_COLOUR_MAX     10
 
