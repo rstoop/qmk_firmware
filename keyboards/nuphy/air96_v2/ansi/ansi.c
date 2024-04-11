@@ -341,7 +341,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 if (user_config.sleep_mode == 1) f_goto_deepsleep  = 1;
                 else if (user_config.sleep_mode == 2) f_goto_sleep = 1;
 
-		if (dev_info.sys_sw_state == SYS_SW_WIN) layer_move(2);
+                if (dev_info.sys_sw_state == SYS_SW_WIN) layer_move(2);
                 else layer_move(0);
             }
             return false;
