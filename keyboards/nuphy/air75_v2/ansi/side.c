@@ -117,7 +117,6 @@ void set_side_rgb(uint8_t side, uint8_t r, uint8_t g, uint8_t b) {
  * @brief  refresh side leds.
  */
 void side_rgb_refresh(void) {
-    if (f_wakeup_prepare) return;
     if (!is_side_rgb_off() || user_config.ee_side_light > 0) {
         pwr_side_led_on(); // power on side LED before refresh
     }
@@ -688,6 +687,7 @@ void rgb_test_show(void) {
  * @brief  side_led_show.
  */
 void side_led_show(void) {
+    if (f_wakeup_prepare) return;
     static uint32_t side_update_time  = 0;
 
     // side_mode & side_speed should always be valid...
