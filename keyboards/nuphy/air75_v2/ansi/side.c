@@ -117,8 +117,8 @@ void set_side_rgb(uint8_t side, uint8_t r, uint8_t g, uint8_t b) {
  * @brief  refresh side leds.
  */
 void side_rgb_refresh(void) {
-    if (!is_side_rgb_off() && !f_wakeup_prepare) {
-        side_led_last_act = 0;
+    if (f_wakeup_prepare) return;
+    if (!is_side_rgb_off() || user_config.ee_side_light > 0) {
         pwr_side_led_on(); // power on side LED before refresh
     }
     if (!flush_side_leds) return;
@@ -265,7 +265,10 @@ void sys_led_show(void) {
         set_side_rgb(LEFT_SIDE + SYS_MARK, current_rgb.r, current_rgb.g, current_rgb.b);
     }
 
-    if (is_caps_word_on()) rgb_matrix_set_color(CAPS_LED, current_rgb.r, current_rgb.g, current_rgb.b);
+    if (is_caps_word_on()) {
+        pwr_rgb_led_on();
+        rgb_matrix_set_color(CAPS_LED, current_rgb.r, current_rgb.g, current_rgb.b);
+    }
 
     if (host_keyboard_led_state().num_lock) {
         current_rgb.r = 0x80;
@@ -477,6 +480,7 @@ void rf_led_show(void) {
     // light up corresponding BT/RF key
     if (dev_info.link_mode <= LINK_BT_3) {
         uint8_t my_pos = dev_info.link_mode == LINK_RF_24 ? 26 : (30 - dev_info.link_mode);
+        pwr_rgb_led_on();
         rgb_matrix_set_color(my_pos, current_rgb.r, current_rgb.g, current_rgb.b);
     }
 }

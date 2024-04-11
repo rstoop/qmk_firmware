@@ -47,9 +47,6 @@ uint16_t       rgb_test_press_delay  = 0;
 uint32_t       sys_show_timer        = 0;
 uint32_t       sleep_show_timer      = 0;
 
-uint16_t       rgb_led_last_act      = 0;
-uint16_t       side_led_last_act     = 0;
-
 host_driver_t *m_host_driver         = 0;
 
 uint16_t       link_timeout          = (100 * 60 * 1);
@@ -366,9 +363,6 @@ void timer_pro(void) {
 
     if (rf_linking_time < 0xffff) rf_linking_time++;
 
-    if (rgb_led_last_act < 0xffff) rgb_led_last_act++;
-
-    if (side_led_last_act < 0xffff) side_led_last_act++;
 }
 
 /**
@@ -431,21 +425,16 @@ void led_power_handle(void) {
 
     interval = timer_read32();
 
-    if (rgb_led_last_act > 100) { // 10ms interval
-        if (rgb_matrix_is_enabled() && rgb_matrix_get_val() != 0) {
-            pwr_rgb_led_on();
-        } else { // brightness is 0 or RGB off.
-            pwr_rgb_led_off();
-        }
-        if (f_bat_num_show) pwr_rgb_led_on();
+    if (rgb_matrix_is_enabled() && rgb_matrix_get_val() != 0) {
+        pwr_rgb_led_on();
+    } else { // brightness is 0 or RGB off.
+        pwr_rgb_led_off();
     }
+    if (f_bat_num_show) pwr_rgb_led_on();
 
-    if (side_led_last_act > 100) { // 10ms intervals
-        if (user_config.ee_side_light == 0) {
-            pwr_side_led_off();
-        } else {
-            pwr_side_led_on();
-        }
+    if (is_side_rgb_off()) {
+        pwr_side_led_off();
+    } else {
+        pwr_side_led_on();
     }
-
 }

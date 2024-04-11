@@ -21,10 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //------------------------------------------------
 
-static bool f_usb_deinit         = 0;
+static bool f_usb_deinit = 0;
 
-static bool rgb_led_on  = 0;
-static bool side_led_on = 0;
+static bool rgb_led_on   = 0;
+static bool side_led_on  = 0;
 
 void clear_report_buffer_and_queue(void);
 
@@ -166,8 +166,6 @@ void enter_deep_sleep(void) {
     
 
     // Enter low power mode and wait for interrupt signal
-    wait_ms(2000);
-    break_all_key();
     PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
 #endif
 }
@@ -245,7 +243,7 @@ void pwr_rgb_led_on(void) {
     gpio_write_pin_high(DC_BOOST_PIN);
     gpio_set_pin_output(DRIVER_LED_CS_PIN);
     gpio_write_pin_low(DRIVER_LED_CS_PIN);
-    rgb_matrix_set_color(RGB_MATRIX_LED_COUNT, 0, 0, 0);
+    rgb_matrix_set_color(RGB_MATRIX_LED_COUNT, 1, 1, 1);
     rgb_led_on = 1;
 }
 
