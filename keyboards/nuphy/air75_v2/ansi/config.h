@@ -33,17 +33,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SD1_RX_PIN                          B7
 #define SD1_RX_PAL_MODE                     0
 
-#ifndef NO_DEBUG
+#if !defined(NO_DEBUG) && !defined(CONSOLE_ENABLE)
 #define NO_DEBUG
 #endif // !NO_DEBUG
 
 #if !defined(NO_PRINT) && !defined(CONSOLE_ENABLE)
 #define NO_PRINT
 #endif // !NO_PRINT
-
+ 
+#if !defined(NO_DEBUG) && defined(CONSOLE_ENABLE)
+#define DEBUG_MATRIX_SCAN_RATE
+#endif // DEBUG_MATRIX_SCAN_RATE
+ 
 #define DYNAMIC_KEYMAP_MACRO_DELAY          8
 
-#define EECONFIG_KB_DATA_SIZE               10 
+#define EECONFIG_KB_DATA_SIZE               12
 #define MCU_SLEEP_ENABLE                    1
 #define GPIO_INPUT_PIN_DELAY                1
 #define RF_QUEUE_SIZE                       128

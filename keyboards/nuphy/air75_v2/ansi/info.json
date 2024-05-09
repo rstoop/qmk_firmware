@@ -7,11 +7,11 @@
         "debounce_type": "asym_eager_defer_pk",
         "lto": true
     },
-    "debounce": 2,
+    "debounce": 3,
     "features": {
         "bootmagic": true,
         "command": false,
-        "console": false,
+        "console": true,
         "extrakey": true,
         "key_lock": false,
         "mousekey": true,
@@ -21,17 +21,17 @@
     "caps_word": {
         "double_tap_shift_turns_on": true,
         "enabled": true,
-	"idle_timeout": 5000
+        "idle_timeout": 5000
     },
     "usb": {
         "vid": "0x19F5",
         "pid": "0x3245",
-	"polling_interval": 1,
+        "polling_interval": 1,
         "device_version": "0.0.1",
         "no_startup_check": true
     },
     "qmk": {
-        "tap_keycode_delay": 1
+        "tap_keycode_delay": 8
     },
     "tapping": {
         "term": 300
@@ -42,7 +42,7 @@
     "matrix_pins": {
         "cols": ["A4", "A5", "A6", "B9", "B0", "B1", "B10", "B11", "B12", "B13", "B14", "B15", "A8", "A9", "A10", "A15", "B3"],
         "rows": ["C14", "C15", "A0", "A1", "A2", "A3"],
-        "io_delay": 20
+        "io_delay": 30 
     },
     "ws2812": {
         "pin": "A7"
@@ -56,6 +56,7 @@
       "speed_steps": 52,
       "sleep": true,
       "led_process_limit": 12,
+      "led_flush_limit": 18,
       "default": { 
           "animation": "cycle_left_right",
           "hue": 0,
@@ -294,4 +295,3 @@
         }
     }
 }
-

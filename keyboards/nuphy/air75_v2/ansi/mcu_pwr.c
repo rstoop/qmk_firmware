@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //------------------------------------------------
 
 static bool f_usb_deinit = 0;
-
 static bool rgb_led_on   = 0;
 static bool side_led_on  = 0;
 
@@ -110,11 +109,11 @@ void enter_deep_sleep(void) {
         m_deinit_usb_072();
     }
 
-    for (int i = 0; i < ARRAY_SIZE(col_pins); ++i) {
+    for (uint8_t i = 0; i < ARRAY_SIZE(col_pins); ++i) {
         gpio_set_pin_output(col_pins[i]);
         gpio_write_pin_high(col_pins[i]);
     }
-    for (int i = 0; i < ARRAY_SIZE(row_pins); ++i) {
+    for (uint8_t i = 0; i < ARRAY_SIZE(row_pins); ++i) {
         gpio_set_pin_input_low(row_pins[i]);
     }
     // Configure interrupt source - all 5 rows of the keyboard.
@@ -156,14 +155,12 @@ void enter_deep_sleep(void) {
     gpio_set_pin_output(DRIVER_SIDE_PIN);
     gpio_write_pin_low(DRIVER_SIDE_PIN);
 
-    // skip RF sleep
-    /*
+    /* skip RF sleep
     gpio_set_pin_input_high(NRF_TEST_PIN);
 
     gpio_set_pin_output(NRF_WAKEUP_PIN);
     gpio_write_pin_high(NRF_WAKEUP_PIN);
     */
-    
 
     // Enter low power mode and wait for interrupt signal
     PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
@@ -182,16 +179,14 @@ void exit_light_sleep(bool stm32_init) {
     if (stm32_init) stm32_clock_init();
 #endif
     // Handshake send to wake RF
-    uart_send_cmd(CMD_HAND, 0, 1);
+    // uart_send_cmd(CMD_HAND, 0, 1);
+    // uart_send_cmd(CMD_RF_STS_SYSC, 1, 0);
 
     if (f_usb_deinit || dev_info.link_mode == LINK_USB) {
         usb_lld_wakeup_host(&USB_DRIVER);
         restart_usb_driver(&USB_DRIVER);
         f_usb_deinit = 0;
     }
-
-    // flag for RF wakeup workload.
-    dev_info.rf_state = RF_WAKE;
 }
 
 /**
@@ -209,10 +204,12 @@ void exit_deep_sleep(void) {
     gpio_set_pin_output(NRF_WAKEUP_PIN);
     gpio_write_pin_high(NRF_WAKEUP_PIN);
 
-
     // Restore IO to working status
     gpio_set_pin_input_high(DEV_MODE_PIN); // PC0
     gpio_set_pin_input_high(SYS_MODE_PIN); // PC1
+
+    // flag for RF wakeup workload.
+    dev_info.rf_state = RF_DISCONNECT;
 
     exit_light_sleep(true);
 }
@@ -234,6 +231,10 @@ void pwr_rgb_led_off(void) {
     gpio_write_pin_low(DC_BOOST_PIN);
     gpio_set_pin_input(DRIVER_LED_CS_PIN);
     rgb_led_on = 0;
+#if !defined(NO_DEBUG)
+    dprint("RGB LED State: OFF\n");
+#endif
+
 }
 
 void pwr_rgb_led_on(void) {
@@ -245,12 +246,18 @@ void pwr_rgb_led_on(void) {
     gpio_write_pin_low(DRIVER_LED_CS_PIN);
     rgb_matrix_set_color(RGB_MATRIX_LED_COUNT, 1, 1, 1);
     rgb_led_on = 1;
+#if !defined(NO_DEBUG)
+    dprint("RGB LED State: ON\n");
+#endif
 }
 
 void pwr_side_led_off(void) {
     if (!side_led_on) return;
     gpio_set_pin_input(DRIVER_SIDE_CS_PIN);
     side_led_on = 0;
+#if !defined(NO_DEBUG)
+    dprint("SIDE LED State: OFF\n");
+#endif
 }
 
 void pwr_side_led_on(void) {
@@ -259,6 +266,9 @@ void pwr_side_led_on(void) {
     gpio_write_pin_low(DRIVER_SIDE_CS_PIN);
     flush_side_leds = true;
     side_led_on = 1;
+#if !defined(NO_DEBUG)
+    dprint("SIDE LED State: ON\n");
+#endif
 }
 
 #if (MCU_SLEEP_ENABLE)

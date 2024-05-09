@@ -49,7 +49,6 @@ typedef enum {
 #define RF_SNIF                 6
 #define RF_INVAILD              0XFE
 #define RF_ERR_STATE            0XFF
-#define RF_WAKE                 0XA5
 
 #define CMD_POWER_UP            0XF0
 #define CMD_SLEEP               0XF1
@@ -75,7 +74,6 @@ typedef enum {
 #define CMD_SET_24G_NAME        0XCA
 #define CMD_GO_TEST             0XCF
 #define CMD_RF_DFU              0XB1
-#define CMD_NULL                0X00
 
 #define CMD_WRITE_DATA          0X80
 #define CMD_READ_DATA           0X81
@@ -104,6 +102,10 @@ typedef enum {
 #define RF_LONG_PRESS_DELAY     30
 #define DEV_RESET_PRESS_DELAY   30
 #define RGB_TEST_PRESS_DELAY    30
+
+#define RGB_MATRIX_GAME_MODE                RGB_MATRIX_GRADIENT_LEFT_RIGHT
+#define RGB_MATRIX_GAME_MODE_VAL            RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2
+#define SIDE_MATRIX_GAME_MODE               4
 
 #define USB_ACTIVE              ((dev_info.link_mode == LINK_USB && USB_DRIVER.state != USB_SUSPENDED) || (dev_info.link_mode != LINK_USB && dev_info.rf_charge == 0x03))
 
@@ -141,6 +143,8 @@ typedef struct
     uint8_t ee_side_colour;
     uint8_t ee_side_one;
     uint8_t sleep_mode;
+    uint8_t caps_word_enable;
+    uint8_t sys_ind;
     uint8_t retain1;
     uint8_t retain2;
 } user_config_t;
@@ -154,6 +158,7 @@ extern uint8_t            rf_blink_cnt;
 extern uint16_t           rf_link_show_time;
 
 extern bool               f_bat_hold;
+extern bool               game_mode_enable;
 extern uint32_t           sys_show_timer;
 extern uint32_t           sleep_show_timer;
 extern bool               f_rf_sw_press;
@@ -175,11 +180,14 @@ extern bool               f_wakeup_prepare;
 extern bool               f_goto_sleep;
 extern bool               f_goto_deepsleep;
 
-extern uint16_t           numlock_timer;
+extern uint32_t           numlock_timer;
+extern uint32_t           caps_word_timer;
+extern uint32_t           caps_word_show_timer;
 extern uint32_t           eeprom_update_timer;
 extern bool               rgb_update;
 extern bool               user_update;
 extern bool               flush_side_leds;
+extern bool               rgb_required;
 
 extern bool               is_side_rgb_off(void);
 
@@ -189,17 +197,18 @@ void    rf_device_init(void);
 void    uart_send_report_repeat(void);
 void    uart_receive_pro(void);
 void    uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_size);
+void    signal_sleep(uint8_t r, uint8_t g, uint8_t b);
 void    side_speed_control(uint8_t dir);
 void    side_light_control(uint8_t dir);
 void    side_colour_control(uint8_t dir);
 void    side_mode_control(uint8_t dir);
-void    side_one_control(void);
-void    side_led_show(void);
+void    side_one_control(uint8_t dir);
+void    led_show(void);
 void    sleep_handle(void);
 void    bat_num_led(void);
 void    rgb_test_show(void);
 void    gpio_init(void);
-void    long_press_key(void);
+void    custom_key_press(void);
 void    break_all_key(void);
 void    switch_dev_link(uint8_t mode);
 void    dial_sw_scan(void);
@@ -209,5 +218,8 @@ void    load_eeprom_data(void);
 void    delay_update_eeprom_data(void);
 void    user_config_reset(void);
 void    led_power_handle(void);
+void    matrix_io_delay(void);
 void    set_link_mode(void);
+void    game_mode_tweak(void);
+void    user_debug(void);
 uint8_t uart_send_cmd(uint8_t cmd, uint8_t ack_cnt, uint8_t delayms);
