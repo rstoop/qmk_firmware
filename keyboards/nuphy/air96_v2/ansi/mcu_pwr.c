@@ -65,6 +65,8 @@ void m_deinit_usb_072(void) {
  * @brief   Low Power mode
  *
  ================================================================*/
+// #include "hal_usb.h"
+// #include "usb_main.h"
 void SYSCFG_EXTILineConfig(uint8_t EXTI_PortSourceGPIOx, uint8_t EXTI_PinSourcex) {
     uint32_t tmp = 0x00;
 
@@ -73,6 +75,7 @@ void SYSCFG_EXTILineConfig(uint8_t EXTI_PortSourceGPIOx, uint8_t EXTI_PinSourcex
     SYSCFG->EXTICR[EXTI_PinSourcex >> 0x02] |= (((uint32_t)EXTI_PortSourceGPIOx) << (0x04 * (EXTI_PinSourcex & (uint8_t)0x03)));
 }
 
+// #include "hal_lld.h"
 #define EXTI_PortSourceGPIOA ((uint8_t)0x00)
 #define EXTI_PortSourceGPIOB ((uint8_t)0x01)
 #define EXTI_PortSourceGPIOC ((uint8_t)0x02)
@@ -109,11 +112,16 @@ void enter_deep_sleep(void) {
         m_deinit_usb_072();
     }
 
-    for (int i = 0; i < ARRAY_SIZE(col_pins); ++i) {
+    // Close timer
+    // if (tim6_enabled) TIM_Cmd(TIM6, DISABLE);
+
+    //------------------------ Configure WakeUp Key
+
+    for (uint8_t i = 0; i < ARRAY_SIZE(col_pins); ++i) {
         gpio_set_pin_output(col_pins[i]);
         gpio_write_pin_high(col_pins[i]);
     }
-    for (int i = 0; i < ARRAY_SIZE(row_pins); ++i) {
+    for (uint8_t i = 0; i < ARRAY_SIZE(row_pins); ++i) {
         gpio_set_pin_input_low(row_pins[i]);
     }
 
@@ -144,6 +152,8 @@ void enter_deep_sleep(void) {
     NVIC_Init(&NVIC_InitStructure);
 
 
+    // led_pwr_sleep_handle();
+
     gpio_set_pin_output(DEV_MODE_PIN);
     gpio_write_pin_low(DEV_MODE_PIN);
 
@@ -163,7 +173,6 @@ void enter_deep_sleep(void) {
     gpio_write_pin_high(NRF_WAKEUP_PIN);
 */
     // Enter low power mode and wait for interrupt signal
-    // PWR_EnterSTOPMode(PWR_Regulator_ON, PWR_STOPEntry_WFI);
     PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
 #endif
 }
@@ -181,7 +190,8 @@ void exit_light_sleep(bool stm32_init) {
     if (stm32_init) stm32_clock_init();
 #endif
     // Handshake send to wake RF
-    uart_send_cmd(CMD_HAND, 0, 1);
+    // uart_send_cmd(CMD_HAND, 0, 1);
+    // uart_send_cmd(CMD_RF_STS_SYSC, 0, 1);
 
     if (f_usb_deinit || dev_info.link_mode == LINK_USB) {
         usb_lld_wakeup_host(&USB_DRIVER);
@@ -189,8 +199,6 @@ void exit_light_sleep(bool stm32_init) {
         f_usb_deinit = 0;
     }
 
-    // flag for RF wakeup workload.
-    dev_info.rf_state = RF_WAKE;
 }
 
 /**
@@ -213,11 +221,22 @@ void exit_deep_sleep(void) {
     gpio_set_pin_input_high(DEV_MODE_PIN); // PC0
     gpio_set_pin_input_high(SYS_MODE_PIN); // PC1
 
+    /* set RF module boot pin high */
+    // gpio_set_pin_input_high(NRF_BOOT_PIN);
+
+    /* Wake RF module */
+    // gpio_set_pin_output(NRF_WAKEUP_PIN);
+    // gpio_write_pin_high(NRF_WAKEUP_PIN);
+
+    // flag for RF wakeup workload.
+    dev_info.rf_state = RF_DISCONNECT;
+
     exit_light_sleep(true);
 }
 
 void led_pwr_sleep_handle(void) {
     pwr_led_off();
+
 }
 
 void led_pwr_wake_handle(void) {
@@ -232,6 +251,9 @@ void pwr_led_off(void) {
     gpio_set_pin_input(RGB_DRIVER_SDB1);
     gpio_set_pin_input(RGB_DRIVER_SDB2);
     rgb_led_on = 0;
+#if !defined(NO_DEBUG)
+    dprint("RGB LED State: OFF\n");
+#endif
 }
 
 void pwr_led_on(void) {
@@ -245,6 +267,9 @@ void pwr_led_on(void) {
     gpio_write_pin_high(RGB_DRIVER_SDB2);
     rgb_matrix_set_color(RGB_MATRIX_LED_COUNT, 1, 1, 1);
     rgb_led_on = 1;
+#if !defined(NO_DEBUG)
+    dprint("RGB LED State: ON\n");
+#endif
 }
 
 #if (MCU_SLEEP_ENABLE)

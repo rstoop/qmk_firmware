@@ -38,7 +38,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define    LSHIFT_LED          71
 
 
-
 //----------------------------------------------------------------
 //         breathe data table
 //----------------------------------------------------------------
@@ -46,6 +45,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 const uint8_t breathe_data_tab[BREATHE_TAB_LEN] =
 {
     0,      1,      2,      3,      4,      5,      6,      7,
+//    8,      9,      10,     12,     14,     16,     18,     20,
+//    22,     24,     27,     30,     33,     36,     39,     42,
+//    45,     49,     53,     57,     61,     65,     69,     73,
     8,      9,      10,     11,     12,     13,     14,     15,
     16,     17,     18,     19,     20,     21,     22,     23,
     25,     27,     29,     31,     33,     36,     39,     42,
@@ -61,8 +63,10 @@ const uint8_t breathe_data_tab[BREATHE_TAB_LEN] =
     109,    104,    99,     94,     89,     85,     81,     77,
     73,     69,     65,     61,     57,     53,     49,     45,
     42,     39,     36,     33,     30,     27,     24,     22,
+//    20,     18,     16,     14,     12,     10,     9,      8,
     7,      6,      5,      4,      3,      2,      1,      0,
 };
+
 
 const uint8_t colour_lib[SIDE_COLOUR_MAX][3] = 
 {
@@ -77,4 +81,3 @@ const uint8_t colour_lib[SIDE_COLOUR_MAX][3] =
     {RGB_MAGENTA},
     {RGB_WHITE}
 };
-

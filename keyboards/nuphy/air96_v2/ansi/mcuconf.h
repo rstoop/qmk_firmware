@@ -27,4 +27,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #undef STM32_I2C_USE_DMA
 #define STM32_I2C_USE_DMA FALSE
-

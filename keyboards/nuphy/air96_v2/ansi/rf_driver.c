@@ -138,7 +138,7 @@ static void rf_send_keyboard(report_keyboard_t *report) {
 }
 
 static void rf_send_nkro(report_nkro_t *report) {
-    // clear current reports to prevent random double repeat keys?
+    // clear current reports
     clear_report_buffer();
     uart_auto_nkey_send(&nkro_report->mods, 16); // only need 1 byte mod + 15 byte keys
 }

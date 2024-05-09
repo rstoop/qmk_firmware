@@ -84,7 +84,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define EXTI_PORT_C18 EXTI_PortSourceGPIOC  // C11
 #define EXTI_PORT_C19 EXTI_PortSourceGPIOC  // C12
 #define EXTI_PORT_C20 EXTI_PortSourceGPIOD  // D2
-					    
+    
 
 #define EXTI_PIN_C0   4   // A4
 #define EXTI_PIN_C1   5   // A5

@@ -22,19 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mcu_pwr.h"
 #include "rf_queue.h"
 
-
-void set_side_rgb(uint8_t side, uint8_t r, uint8_t g, uint8_t b);
-void rgb_matrix_update_pwm_buffers(void);
-
-void signal_sleep(uint8_t r, uint8_t g, uint8_t b) {
-    // Visual cue for sleep on side LED.
-    pwr_led_on();
-    wait_ms(50); // give some time to ensure LED powers on.
-    set_side_rgb(3, r, g, b);
-    rgb_matrix_update_pwm_buffers();
-    wait_ms(300);
-}
-
 void deep_sleep_handle(void) {
     signal_sleep(0x00, dev_info.link_mode == LINK_RF_24 ? 0x80 : 0x00, dev_info.link_mode == LINK_RF_24 ? 0x00 : 0x80);
     // Sync again before sleeping
@@ -42,7 +29,7 @@ void deep_sleep_handle(void) {
     enter_deep_sleep(); // puts the board in WFI mode and pauses the MCU
 #if (MCU_SLEEP_ENABLE)
     exit_deep_sleep();  // This gets called when there is an interrupt (wake) event.
-    no_act_time = 0; // required to not cause an immediate sleep on first wake
+    no_act_time = 0;    // required to not cause an immediate sleep on first wake
 #endif
 }
 
@@ -57,9 +44,8 @@ void sleep_handle(void) {
     if (user_config.sleep_mode == 0 || USB_ACTIVE) return;
     if (timer_elapsed32(delay_step_timer) > (60 * 1000)) no_act_time = 0;
 
-    /* 50ms interval */
-    uint16_t check_interval = f_wakeup_prepare ? 20 : 500;
-    if (timer_elapsed32(delay_step_timer) < check_interval) return;
+    /* 500ms interval */
+    if (timer_elapsed32(delay_step_timer) < 500) return;
         delay_step_timer = timer_read32();
 
     if (user_config.sleep_mode != 1 || f_rf_sleep)
@@ -83,15 +69,6 @@ void sleep_handle(void) {
         f_wakeup_prepare = 1;
     }
 
-    // wakeup check
-    if (f_wakeup_prepare) {
-        if (no_act_time <= 10) { // activity wake up
-            f_wakeup_prepare = 0;
-            f_rf_sleep       = 0;
-            exit_light_sleep(false);
-        }
-    }
-
     // sleep check
     if (f_goto_sleep || f_wakeup_prepare)
         return;
@@ -112,7 +89,7 @@ void sleep_handle(void) {
         rf_linking_time  = 0;
     } else if (dev_info.rf_state == RF_DISCONNECT) {
             rf_disconnect_time++;
-        if (rf_disconnect_time > 10 * 2) {
+        if (rf_disconnect_time > 5 * 2) {
             f_goto_deepsleep   = 1;
             f_goto_sleep       = 1;
             rf_disconnect_time = 0;

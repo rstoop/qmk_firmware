@@ -7,11 +7,11 @@
         "debounce_type": "asym_eager_defer_pk",
         "lto": true
     },
-    "debounce": 2,
+    "debounce": 3,
     "features": {
         "bootmagic": true,
         "command": false,
-        "console": false,
+        "console": true,
         "extrakey": true,
         "key_lock": false,
         "mousekey": true,
@@ -31,7 +31,7 @@
         "no_startup_check": true
     },
     "qmk": {
-        "tap_keycode_delay": 1
+        "tap_keycode_delay": 8
     },
     "tapping": {
         "term": 300
@@ -51,8 +51,9 @@
         "max_brightness": 255,
         "val_steps": 52,
         "speed_steps": 52,
-	"sleep": true,
+        "sleep": true,
         "led_process_limit": 12,
+        "led_flush_limit": 18,
         "default": {
             "animation": "cycle_left_right",
             "hue": 0,
@@ -206,19 +207,7 @@
             {"matrix": [5, 15], "x": 140,   "y": 50, "flags": 4},
             {"matrix": [5, 16], "x": 150,   "y": 50, "flags": 4},
             {"matrix": [5, 17], "x": 160,   "y": 50, "flags": 4},
-            {"matrix": [5, 19], "x": 170,   "y": 50, "flags": 4},
-
-            {"flags": 0},
-            {"flags": 0},
-            {"flags": 0},
-            {"flags": 0},
-            {"flags": 0},
-
-            {"flags": 0},
-            {"flags": 0},
-            {"flags": 0},
-            {"flags": 0},
-            {"flags": 0}
+            {"matrix": [5, 19], "x": 170,   "y": 50, "flags": 4}
         ]
     },
     "layouts": {

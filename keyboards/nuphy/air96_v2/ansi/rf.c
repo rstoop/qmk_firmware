@@ -66,8 +66,11 @@ void    break_all_key(void);
 static uint8_t get_repeat_interval(void) {
     uint8_t interval = MAX(byte_report_buff.repeat, bit_report_buff.repeat);
 
-    if (interval < 10) return 20;
-    return 50;
+
+    if (interval == 0) return 50;
+    else if (interval < 10) return 20;
+    return 25;
+    
 }
 
 /**
@@ -88,24 +91,21 @@ void clear_report_buffer_and_queue(void) {
  */
 void uart_send_repeat_from_queue(void) {
     static uint32_t        dequeue_timer = 0;
-    static uint32_t        repeat_timer  = 0;
     static report_buffer_t report_buff   = {0};
-    if (timer_elapsed32(dequeue_timer) > 50 && !rf_queue.is_empty()) {
+    if (timer_elapsed32(dequeue_timer) > 10 && !rf_queue.is_empty()) { //50
         rf_queue.dequeue(&report_buff);
-        repeat_timer  = 0;
         dequeue_timer = timer_read32();
     }
 
     // queue is empty, continue sending from standard process.
     if (rf_queue.is_empty()) {
         clear_report_buffer_and_queue();
-        byte_report_buff = report_buff;
+        if (report_buff.length > 6) byte_report_buff = report_buff;
     }
 
-    if (report_buff.repeat < 2 && timer_elapsed32(repeat_timer) > 23) {
+    if (report_buff.repeat < 8 ) {
         uart_send_report(report_buff.cmd, report_buff.buffer, report_buff.length);
         report_buff.repeat++;
-        repeat_timer = timer_read32();
     }
 }
 
@@ -117,7 +117,7 @@ void uart_send_report_repeat(void) {
     if (dev_info.link_mode == LINK_USB) return;
 
     if (dev_info.rf_state != RF_CONNECT) {
-	if (no_act_time > 600) clear_report_buffer_and_queue(); // 6 seconds
+        if (no_act_time > 600) { clear_report_buffer_and_queue(); }
         return;
     }
 
@@ -127,10 +127,12 @@ void uart_send_report_repeat(void) {
         return;
     }
 
+    if (no_act_time > 100) return;
+
     uint8_t interval = get_repeat_interval();
 
     if (timer_elapsed32(uart_rpt_timer) >= interval) {
-        if (no_act_time <= 60) { // increments every 10ms, 50 = 500ms
+        if (no_act_time <= 40) { // increments every 10ms, 50 = 500ms
             if (byte_report_buff.cmd) {
                 uart_send_report(byte_report_buff.cmd, byte_report_buff.buffer, byte_report_buff.length);
                 byte_report_buff.repeat++;
@@ -140,7 +142,9 @@ void uart_send_report_repeat(void) {
             if (bit_report_buff.cmd) {
                 uart_send_report(bit_report_buff.cmd, bit_report_buff.buffer, bit_report_buff.length);
                 bit_report_buff.repeat++;
+
             }
+
         } else {
             clear_report_buffer_and_queue();
         }
@@ -388,7 +392,7 @@ void dev_sts_sync(void) {
     static uint32_t interval_timer  = 0;
     static uint8_t  link_state_temp = RF_DISCONNECT;
 
-    if (timer_elapsed32(interval_timer) < 200) return;
+    if (timer_elapsed32(interval_timer) < 500) return;
     interval_timer = timer_read32();
 
     if (f_rf_reset) {
@@ -418,7 +422,7 @@ void dev_sts_sync(void) {
         }
 
         if (dev_info.rf_state != RF_CONNECT) {
-            if (disconnect_delay >= 10) {
+            if (disconnect_delay >= 12) {
                 rf_blink_cnt      = 3;
                 rf_link_show_time = 0;
                 link_state_temp   = dev_info.rf_state;
@@ -446,7 +450,7 @@ void dev_sts_sync(void) {
     uart_rpt_timer = timer_read32();
 
     if (dev_info.link_mode != LINK_USB) {
-        if (++sync_lost >= 5) {
+        if (++sync_lost >= 6) {
             sync_lost  = 0;
             f_rf_reset = 1;
         }
@@ -459,7 +463,6 @@ void dev_sts_sync(void) {
  * @param Length data length
  */
 void uart_send_bytes(uint8_t *Buffer, uint32_t Length) {
-    Usart_Mgr.RXCmd = CMD_NULL;
     gpio_write_pin_low(NRF_WAKEUP_PIN);
     wait_us(50);
 
@@ -468,7 +471,7 @@ void uart_send_bytes(uint8_t *Buffer, uint32_t Length) {
     wait_us(50 + Length * 30);
     gpio_write_pin_high(NRF_WAKEUP_PIN);
 
-    wait_us(600);
+    wait_us(800);
 }
 
 /**
@@ -509,6 +512,7 @@ void uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_s
 
     uart_send_bytes(&Usart_Mgr.TXDBuf[0], report_size + 5);
     uart_rpt_timer = timer_read32(); // reset uart repeat timer.
+    // wait_us(200);
 }
 
 /**
@@ -575,7 +579,8 @@ void rf_device_init(void) {
     while (timeout--) {
         uart_send_cmd(CMD_HAND, 0, 20);
         wait_ms(5);
-        uart_receive_pro();
+        uart_receive_pro(); // receive data
+        // uart_receive_pro(); // parsing data
         if (f_rf_hand_ok) break;
     }
 
@@ -585,6 +590,7 @@ void rf_device_init(void) {
         uart_send_cmd(CMD_READ_DATA, 0, 20);
         wait_ms(5);
         uart_receive_pro();
+        // uart_receive_pro();
         if (f_rf_read_data_ok) break;
     }
 
@@ -594,6 +600,7 @@ void rf_device_init(void) {
         uart_send_cmd(CMD_RF_STS_SYSC, 0, 20);
         wait_ms(5);
         uart_receive_pro();
+        // uart_receive_pro();
         if (f_rf_sts_sysc_ok) break;
     }
 
