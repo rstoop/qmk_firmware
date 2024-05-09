@@ -207,12 +207,12 @@
 		{
 			"name": "Bat\nShow",
 			"title": "Battery Show",
-			"shortName": "Bt_Show"
+			"shortName": "Bat_Show"
 		},
 		{
 			"name": "Bat\nNumeric",
 			"title": "Battery Show Numeric",
-			"shortName": "Bt_Nr"
+			"shortName": "Bat_Nr"
 		},
 		{
 			"name": "RGB\nTest",
