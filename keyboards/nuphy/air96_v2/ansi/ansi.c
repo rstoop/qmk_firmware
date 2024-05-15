@@ -51,33 +51,30 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     }
 
     switch (keycode) {
-        case CAPS_WORD:
-        case SLEEP_MODE:
-            if (game_mode_enable) { return true; }
-            break;
-
         case SIDE_VAI:
         case SIDE_VAD:
         case SIDE_HUI:
+        case IND_TOGG:
             if (game_mode_enable) { break; }
-            eeprom_update_timer = 0;
-            user_update = 1;
+            call_update_eeprom_data(&user_update);
             break;
 
         case SIDE_MOD:
         case SIDE_SPI:
         case SIDE_SPD:
         case SIDE_1:
+        case SLEEP_MODE:
+        case BAT_SHOW:
+        case SLEEP_NOW:
+        case CAPS_WORD:
             if (game_mode_enable) { return true; }
-            eeprom_update_timer = 0;
-            user_update = 1;
+            call_update_eeprom_data(&user_update);
             break;
 
         case RGB_VAI:
         case RGB_VAD:
             if (game_mode_enable) { break; }
-            eeprom_update_timer = 0;
-            rgb_update = 1;
+            call_update_eeprom_data(&rgb_update);
             break;
 
         case RGB_MOD:
@@ -85,8 +82,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RGB_SPI:
         case RGB_SPD:
             if (game_mode_enable) { return true; }
-            eeprom_update_timer = 0;
-            rgb_update = 1;
+            call_update_eeprom_data(&rgb_update);
             break;
         }
 
@@ -107,55 +103,10 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case LNK_RF:
+        case LNK_RF ... LNK_BLE3:
             if (record->event.pressed) {
                 if (dev_info.link_mode != LINK_USB) {
-                    rf_sw_temp    = LINK_RF_24;
-                    f_rf_sw_press = 1;
-                    break_all_key();
-                }
-            } else if (f_rf_sw_press) {
-                if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
-                    set_link_mode();
-                    uart_send_cmd(CMD_SET_LINK, 10, 20);
-                }
-            }
-            return false;
-
-        case LNK_BLE1:
-            if (record->event.pressed) {
-                if (dev_info.link_mode != LINK_USB) {
-                    rf_sw_temp    = LINK_BT_1;
-                    f_rf_sw_press = 1;
-                    break_all_key();
-                }
-            } else if (f_rf_sw_press) {
-                if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
-                    set_link_mode();
-                    uart_send_cmd(CMD_SET_LINK, 10, 20);
-                }
-            }
-            return false;
-
-        case LNK_BLE2:
-            if (record->event.pressed) {
-                if (dev_info.link_mode != LINK_USB) {
-                    rf_sw_temp    = LINK_BT_2;
-                    f_rf_sw_press = 1;
-                    break_all_key();
-                }
-            } else if (f_rf_sw_press) {
-                if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
-                    set_link_mode();
-                    uart_send_cmd(CMD_SET_LINK, 10, 20);
-                }
-            }
-            return false;
-
-        case LNK_BLE3:
-            if (record->event.pressed) {
-                if (dev_info.link_mode != LINK_USB) {
-                    rf_sw_temp    = LINK_BT_3;
+                    rf_sw_temp    = keycode - 2;
                     f_rf_sw_press = 1;
                     break_all_key();
                 }
@@ -177,7 +128,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case CAPS_WORD:
             if (record->event.pressed) {
                 caps_word_timer = timer_read32();
-            } else if (timer_elapsed32(caps_word_timer) < TAPPING_TERM * 4) {
+            } else {
                 caps_word_timer = 0;
             }
             return false;
@@ -193,9 +144,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 if (dev_info.sys_sw_state == SYS_SW_MAC) {
                     host_consumer_send(0xcf);
                 } else {
-                    register_code(KC_F5);
-                    wait_ms(10);
-                    unregister_code(KC_F5);
+                    tap_code(KC_F5);
                 }
             } else if (dev_info.sys_sw_state == SYS_SW_MAC) {
                 host_consumer_send(0);
@@ -213,13 +162,9 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case TASK:
             if (record->event.pressed) {
                 if (dev_info.sys_sw_state == SYS_SW_MAC) {
-                    register_code(KC_MCTL);
-                    wait_ms(10);
-                    unregister_code(KC_MCTL);
+                    tap_code(KC_MCTL);
                 } else {
-                    register_code(KC_CALC);
-                    wait_ms(10);
-                    unregister_code(KC_CALC);
+                    tap_code(KC_CALC);
                 }
             }
             return false;
@@ -229,13 +174,13 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 if (dev_info.sys_sw_state == SYS_SW_MAC) {
                     register_code(KC_LGUI);
                     register_code(KC_SPACE);
-                    wait_ms(10);
+                    wait_ms(TAP_CODE_DELAY);
                     unregister_code(KC_LGUI);
                     unregister_code(KC_SPACE);
                 } else {
                     register_code(KC_LCTL);
                     register_code(KC_F);
-                    wait_ms(10);
+                    wait_ms(TAP_CODE_DELAY);
                     unregister_code(KC_F);
                     unregister_code(KC_LCTL);
                 }
@@ -248,14 +193,12 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     register_code(KC_LGUI);
                     register_code(KC_LSFT);
                     register_code(KC_3);
-                    wait_ms(10);
+                    wait_ms(TAP_CODE_DELAY);
                     unregister_code(KC_3);
                     unregister_code(KC_LSFT);
                     unregister_code(KC_LGUI);
                 } else {
-                    register_code(KC_PSCR);
-                    wait_ms(10);
-                    unregister_code(KC_PSCR);
+                    tap_code(KC_PSCR);
                 }
             }
             return false;
@@ -266,15 +209,13 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     register_code(KC_LGUI);
                     register_code(KC_LSFT);
                     register_code(KC_4);
-                    wait_ms(10);
+                    wait_ms(TAP_CODE_DELAY);
                     unregister_code(KC_4);
                     unregister_code(KC_LSFT);
                     unregister_code(KC_LGUI);
                 }
                 else {
-                    register_code(KC_PSCR);
-                    wait_ms(10);
-                    unregister_code(KC_PSCR);
+                    tap_code(KC_PSCR);
                 }
             }
             return false;
@@ -374,7 +315,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     sleep_time_delay = (100 * 60 * (4 * user_config.sleep_mode - 2));
                 } else user_config.sleep_mode = 0;
                 sleep_show_timer = timer_read32();
-                eeconfig_update_kb_datablock(&user_config);
             }
             return false;
 
@@ -382,8 +322,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 user_config.sys_ind++;
                 if (user_config.sys_ind == 3) { user_config.sys_ind = 0; }
-                eeprom_update_timer = 0;
-                user_update = 1;
             }
             return false;
 
@@ -403,26 +341,23 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case NUMLOCK_INS:
             if (record->event.pressed) {
-                numlock_timer = timer_read32();
                 if (get_mods() & MOD_MASK_CSA) {
                     numlock_timer = 0;
-                    register_code(KC_INS);
-                    wait_ms(10);
-                    unregister_code(KC_INS);
+                    tap_code(KC_INS);
+                } else {
+                    numlock_timer = timer_read32();
                 }
             } else {
                 if (numlock_timer != 0 && timer_elapsed32(numlock_timer) < TAPPING_TERM) {
                     numlock_timer = 0;
-                    register_code(KC_INS);
-                    wait_ms(10);
-                    unregister_code(KC_INS);
+                    tap_code(KC_INS);
                 }
             }
             return false;
 
         case SLEEP_NOW:
             if (record->event.pressed) {
-                wait_ms(10);
+                wait_ms(TAP_CODE_DELAY);
             } else {
                 if (user_config.sleep_mode == 0) return true;
                 else {

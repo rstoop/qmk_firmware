@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //------------------------------------------------
 
-static bool f_usb_deinit         = 0;
-static bool rgb_led_on  = 0;
+static bool f_usb_deinit  = 0;
+static bool rgb_led_on    = 0;
 
 void clear_report_buffer_and_queue(void);
 
@@ -191,7 +191,7 @@ void exit_light_sleep(bool stm32_init) {
 #endif
     // Handshake send to wake RF
     // uart_send_cmd(CMD_HAND, 0, 1);
-    // uart_send_cmd(CMD_RF_STS_SYSC, 0, 1);
+    uart_send_cmd(CMD_RF_STS_SYSC, 1, 1);
 
     if (f_usb_deinit || dev_info.link_mode == LINK_USB) {
         usb_lld_wakeup_host(&USB_DRIVER);

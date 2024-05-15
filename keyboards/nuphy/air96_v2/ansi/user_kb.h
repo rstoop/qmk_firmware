@@ -74,6 +74,7 @@ typedef enum {
 #define CMD_SET_24G_NAME        0XCA
 #define CMD_GO_TEST             0XCF
 #define CMD_RF_DFU              0XB1
+#define CMD_NULL                0X00
 
 #define CMD_WRITE_DATA          0X80
 #define CMD_READ_DATA           0X81
@@ -106,6 +107,10 @@ typedef enum {
 #define RGB_MATRIX_GAME_MODE                RGB_MATRIX_GRADIENT_LEFT_RIGHT
 #define RGB_MATRIX_GAME_MODE_VAL            RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2
 #define SIDE_MATRIX_GAME_MODE               4
+
+#define    CAPS_LED            55
+#define    LSHIFT_LED          71
+#define    WIN_LED             89
 
 #define USB_ACTIVE              ((dev_info.link_mode == LINK_USB && USB_DRIVER.state != USB_SUSPENDED) || (dev_info.link_mode != LINK_USB && dev_info.rf_charge == 0x03))
 
@@ -183,7 +188,6 @@ extern bool               f_goto_deepsleep;
 
 extern uint32_t           numlock_timer;
 extern uint32_t           caps_word_timer;
-extern uint32_t           caps_word_show_timer;
 extern uint32_t           eeprom_update_timer;
 extern bool               rgb_update;
 extern bool               user_update;
@@ -222,4 +226,6 @@ void    set_link_mode(void);
 void    matrix_io_delay(void);
 void    game_mode_tweak(void);
 void    user_debug(void);
+void    call_update_eeprom_data(bool* eeprom_update_init);
+void    signal_rgb_led(uint8_t state, uint8_t start_led, uint8_t end_led, uint16_t show_time);
 uint8_t uart_send_cmd(uint8_t cmd, uint8_t ack_cnt, uint8_t delayms);
