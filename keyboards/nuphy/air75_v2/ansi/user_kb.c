@@ -364,6 +364,10 @@ void load_eeprom_data(void) {
     if (user_config.init_layer < 100) user_config_reset();
 }
 
+void call_update_eeprom_data(bool* eeprom_update_init) {
+    *eeprom_update_init = 1;
+    eeprom_update_timer = 0;
+}
 
 /**
  * @brief User config update to eeprom with delay

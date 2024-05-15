@@ -64,7 +64,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case SIDE_VAD:
         case SIDE_HUI:
         case IND_TOGG:
-        case TG(FN_LOCK_LAYER):
             if (game_mode_enable) { break; }
             call_update_eeprom_data(&user_update);
             break;
@@ -75,7 +74,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case SIDE_1:
         case SLEEP_MODE:
         case BAT_SHOW:
-        case AWAKE_KEY:
         case SLEEP_NOW:
         case CAPS_WORD:
             if (game_mode_enable) { return true; }
