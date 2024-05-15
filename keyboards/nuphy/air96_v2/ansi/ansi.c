@@ -333,7 +333,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case LGUI_TG:
             if (record->event.pressed) {
                 disable_lgui = !disable_lgui;
-                signal_rgb_led(disable_lgui, LGUI_LED, LGUI_LED, 3000);
+                signal_rgb_led(!disable_lgui, LGUI_LED, LGUI_LED, 3000);
             }
             return false;
 
