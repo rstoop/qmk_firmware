@@ -243,6 +243,11 @@
 			"name": "Caps_Word\nTrigger",
 			"title": "Trigger Caps_Word",
 			"shortName": "Caps_Word"
+		},
+		{
+			"name": "L_GUI\nTrigger",
+			"title": "Trigger LGUI",
+			"shortName": "LGUI_TOGG"
 		}
 	]
 }
