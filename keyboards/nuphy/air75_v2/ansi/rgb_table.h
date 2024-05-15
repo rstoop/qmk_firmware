@@ -33,8 +33,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define    RF_LED_LINK_PERIOD  500
 #define    RF_LED_PAIR_PERIOD  250
 
-#define    CAPS_LED            59
-#define    LSHIFT_LED          60
+// #define    CAPS_LED            59
+// #define    LSHIFT_LED          60
 
 //----------------------------------------------------------------
 //         breathe data table

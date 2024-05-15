@@ -34,8 +34,13 @@ enum {
 bool     flush_side_leds      = 0;
 uint8_t  side_play_point      = 0;
 uint32_t side_one_timer       = 0;
-uint32_t caps_word_show_timer = 0;
-uint8_t  sys_light            = 2;
+uint8_t  sys_light            = 0;
+bool     rgb_state            = 0;
+uint8_t  rgb_start_led        = 0;
+uint8_t  rgb_end_led          = 0;
+uint16_t rgb_show_time        = 0;
+uint32_t rgb_indicator_timer  = 0;
+
 rgb_led_t side_leds[SIDE_LED_NUM] = {0};
 
 HSV hsv = { .h = 0, .s = 255, .v = 255};
@@ -67,6 +72,10 @@ const uint8_t side_led_index_tab[SIDE_LINE][2] = {
     {1, 10},
     {0, 11},
 };
+
+void set_sys_light(void) {
+    sys_light = user_config.ee_side_light > 5 ? 1 : (3 - user_config.ee_side_light / 2);
+}
 
 void side_ws2812_setleds(rgb_led_t *ledarray, uint16_t leds);
 void rgb_matrix_update_pwm_buffers(void);
@@ -150,6 +159,7 @@ void side_light_control(uint8_t bright) {
     } else {
         if (user_config.ee_side_light > 0) user_config.ee_side_light--;
     }
+    set_sys_light();
 }
 
 /**
@@ -370,7 +380,7 @@ static void side_spectrum_mode_show(void) {
 static void side_breathe_mode_show(void) {
     uint8_t mod_side_light = user_config.ee_side_light == 1 ? 2 : user_config.ee_side_light;
 
-    light_point_playing(0, 1, BREATHE_TAB_LEN, &side_play_point);
+    light_point_playing(1, 1, BREATHE_TAB_LEN, &side_play_point);
 
     current_rgb.r = colour_lib[user_config.ee_side_colour][0];
     current_rgb.g = colour_lib[user_config.ee_side_colour][1];
@@ -681,14 +691,32 @@ void rgb_test_show(void) {
     }
 }
 
-void caps_word_enable_show(void) {
-    if (caps_word_show_timer > 0) {
-        current_rgb.r = 0x00, current_rgb.g = 0xFF, current_rgb.b = 0x00;
-        if (user_config.caps_word_enable == 0) {
-            current_rgb.r = 0xFF, current_rgb.g = 0x00;
+void signal_rgb_led(uint8_t state, uint8_t start_led, uint8_t end_led, uint16_t show_time) {
+    rgb_state     = state > 0 ? 1 : 0;
+    rgb_start_led = start_led;
+    rgb_end_led   = end_led;
+    rgb_show_time = show_time;
+}
+
+void rgb_led_indicator(void) {
+    if (rgb_show_time == 0) return;
+    if (rgb_indicator_timer == 0) { rgb_indicator_timer = timer_read32(); }
+    if (timer_elapsed32(rgb_indicator_timer) < rgb_show_time) {
+        current_rgb.r = 0xFF;
+        current_rgb.g = 0x00;
+        current_rgb.b = 0x00;
+        if (rgb_state) {
+            current_rgb.r = 0x00;
+            current_rgb.g = 0xFF;
         }
+
         rgb_required = 1;
-        rgb_matrix_set_color(CAPS_LED, current_rgb.r, current_rgb.g, current_rgb.b);
+        for (uint8_t i = rgb_start_led; i <= rgb_end_led; i++) {
+            rgb_matrix_set_color(i, current_rgb.r, current_rgb.g, current_rgb.b);
+        }
+    } else {
+        rgb_indicator_timer = 0;
+        rgb_show_time       = 0;
     }
 }
 
@@ -713,7 +741,7 @@ void normal_led_process(void) {
 
     if (timer_elapsed32(side_update_time) < update_interval) return;
     side_update_time = timer_read32();
-    sys_light = user_config.ee_side_light > 5 ? 1 : (3 - user_config.ee_side_light / 2);
+    if (!sys_light) { set_sys_light(); }
 
     switch (user_config.ee_side_mode) {
         case SIDE_WAVE:
@@ -745,7 +773,7 @@ void normal_led_process(void) {
 
 void realtime_led_process(void) {
     rf_led_show();
-    caps_word_enable_show();
+    rgb_led_indicator();
     caps_word_show();
 }
 

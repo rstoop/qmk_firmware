@@ -40,8 +40,6 @@ bool f_bat_num_show     = 0;
 uint8_t        rf_blink_cnt          = 0;
 uint8_t        rf_sw_temp            = 0;
 uint8_t        host_mode             = 0;
-uint8_t        bat_percent           = 0;
-uint8_t        low_battery_mode      = 0;
 uint16_t       rf_linking_time       = 0;
 uint16_t       rf_link_show_time     = 0;
 uint32_t       no_act_time           = 0;
@@ -168,9 +166,7 @@ void custom_key_press(void) {
 
     // Trigger NumLock
     if (numlock_timer != 0 && timer_elapsed32(numlock_timer) > TAPPING_TERM) {
-        register_code(KC_NUM);
-        wait_ms(10);
-        unregister_code(KC_NUM);
+        tap_code(KC_NUM);
         numlock_timer = 0;
     }
 
@@ -187,13 +183,11 @@ void custom_key_press(void) {
 
     if (caps_word_timer != 0 && timer_elapsed32(caps_word_timer) > TAPPING_TERM * 4) {
         user_config.caps_word_enable = !user_config.caps_word_enable;
-        user_update = 1;
-        eeprom_update_timer = 0;
         caps_word_timer = 0;
 #ifndef NO_DEBUG
         dprintf("caps_word_state: %s\n", user_config.caps_word_enable ? "ON" : "OFF");
 #endif
-        caps_word_show_timer = CAPS_WORD_IDLE_TIMEOUT / 10; 
+	signal_rgb_led(user_config.caps_word_enable, CAPS_LED, CAPS_LED, CAPS_WORD_IDLE_TIMEOUT);
     }
 }
 
@@ -283,6 +277,7 @@ void dial_set(uint8_t dial_scan, bool led_sys_show) {
  */
 void dial_sw_scan(void) {
     uint8_t         dial_scan       = 0;
+    static uint8_t  debounce        = 0;
     static uint8_t  dial_save       = 0xf0;
 
     dial_scan       = dial_read();
@@ -295,7 +290,12 @@ void dial_sw_scan(void) {
         f_wakeup_prepare  = 0;
 
         dial_save         = dial_scan;
+        debounce          = 5;
         f_dial_sw_init_ok = 0;
+        return;
+    } else if (debounce) {
+        debounce--;
+        return;
     }
 
     dial_set(dial_scan, true);
@@ -319,7 +319,7 @@ void dial_sw_fast_scan(void) {
     uint8_t         debounce    = 0;
 
     // Debounce to get a stable state
-    for (debounce = 0; debounce < 5; debounce++) {
+    for (debounce = 0; debounce < 10; debounce++) {
         dial_scan       = dial_read();
         if (dial_check != dial_scan) {
             dial_check = dial_scan;
@@ -354,8 +354,6 @@ void timer_pro(void) {
 
     if (rf_linking_time < 0xffff) rf_linking_time++;
 
-    if (caps_word_show_timer > 0) caps_word_show_timer--;
-
 }
 
 /**
@@ -375,7 +373,7 @@ void delay_update_eeprom_data(void) {
         if (user_update || rgb_update) eeprom_update_timer = timer_read32();
         return;
     }
-    if (timer_elapsed32(eeprom_update_timer) < (1000 * 40)) return;
+    if (timer_elapsed32(eeprom_update_timer) < (1000 * 30)) return;
     if (user_update) {
 #ifndef NO_DEBUG
         dprint("Updating EEPROM: user_config\n");
@@ -442,7 +440,7 @@ void user_config_reset(void) {
 
 void matrix_io_delay(void) {
     if (MATRIX_IO_DELAY == 0 || game_mode_enable == 1) {
-        __asm__ volatile("nop\nnop\nnop\n");
+        __asm__ __volatile__("nop;nop;nop;\n\t" ::: "memory");
         return;
     }
 

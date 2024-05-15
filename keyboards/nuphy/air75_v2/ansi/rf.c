@@ -66,9 +66,8 @@ void    break_all_key(void);
 static uint8_t get_repeat_interval(void) {
     uint8_t interval = MAX(byte_report_buff.repeat, bit_report_buff.repeat);
 
-    if (interval == 0) return 50;
-    else if (interval < 10) return 20;
-    return 25;
+    if (interval < 10) return 20;
+    return 50;
 }
 
 /**
@@ -126,12 +125,12 @@ void uart_send_report_repeat(void) {
         return;
     }
 
-    if (no_act_time > 100) return;
+    if (no_act_time > 200) return;
 
     uint8_t interval = get_repeat_interval();
 
     if (timer_elapsed32(uart_rpt_timer) >= interval) {
-        if (no_act_time <= 40) { // increments every 10ms, 40 = 400ms
+        if (no_act_time <= 75) { // increments every 10ms, 40 = 400ms
             if (byte_report_buff.cmd) {
                 uart_send_report(byte_report_buff.cmd, byte_report_buff.buffer, byte_report_buff.length);
                 byte_report_buff.repeat++;
@@ -419,7 +418,7 @@ void dev_sts_sync(void) {
         }
 
         if (dev_info.rf_state != RF_CONNECT) {
-            if (disconnect_delay >= 12) {
+            if (disconnect_delay >= 6) {
                 rf_blink_cnt      = 3;
                 rf_link_show_time = 0;
                 link_state_temp   = dev_info.rf_state;
@@ -444,11 +443,11 @@ void dev_sts_sync(void) {
      *  if RF is sleeping we don't want to sync and wakeup the RF
     */
     if (f_wakeup_prepare && f_rf_sleep) return;
-    uart_send_cmd(CMD_RF_STS_SYSC, 0, 0);
+    uart_send_cmd(CMD_RF_STS_SYSC, 1, 1);
     uart_rpt_timer = timer_read32();
 
     if (dev_info.link_mode != LINK_USB) {
-        if (++sync_lost >= 6) {
+        if (++sync_lost >= 3) {
             sync_lost  = 0;
             f_rf_reset = 1;
         }
@@ -469,7 +468,7 @@ void uart_send_bytes(uint8_t *Buffer, uint32_t Length) {
     wait_us(50 + Length * 30);
     gpio_write_pin_high(NRF_WAKEUP_PIN);
 
-    wait_us(800);
+    wait_us(800 - Length * 30);
 }
 
 /**
