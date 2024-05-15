@@ -227,7 +227,7 @@
 		{
 			"name": "Indicator\nToggle",
 			"title": "SysLed Ind Toggle",
-			"shortName": "Ind_Togg"
+			"shortName": "Ind_Tg"
 		},
 		{
 			"name": "Sleep\nTrigger",
@@ -247,7 +247,7 @@
 		{
 			"name": "L_GUI\nTrigger",
 			"title": "Trigger LGUI",
-			"shortName": "LGUI_TOGG"
+			"shortName": "Lgui_Tg"
 		}
 	]
 }

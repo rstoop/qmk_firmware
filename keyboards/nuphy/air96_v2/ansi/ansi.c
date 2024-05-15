@@ -59,7 +59,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case SIDE_VAI:
         case SIDE_VAD:
         case SIDE_HUI:
-        case IND_TOGG:
+        case IND_TG:
             if (game_mode_enable) { break; }
             call_update_eeprom_data(&user_update);
             break;
@@ -323,17 +323,17 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case IND_TOGG:
+        case IND_TG:
             if (record->event.pressed) {
                 user_config.sys_ind++;
                 if (user_config.sys_ind == 3) { user_config.sys_ind = 0; }
             }
             return false;
 
-        case LGUI_TOGG:
+        case LGUI_TG:
             if (record->event.pressed) {
                 disable_lgui = !disable_lgui;
-                signal_rgb_led(disable_lgui, WIN_LED, WIN_LED, 3000);
+                signal_rgb_led(disable_lgui, LGUI_LED, LGUI_LED, 3000);
             }
             return false;
 
