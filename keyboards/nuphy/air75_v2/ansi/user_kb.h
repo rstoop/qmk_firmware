@@ -110,7 +110,7 @@ typedef enum {
 
 #define    CAPS_LED            59
 #define    LSHIFT_LED          60
-#define    WIN_LED             82 
+#define    LGUI_LED            82 
 
 #define USB_ACTIVE              ((dev_info.link_mode == LINK_USB && USB_DRIVER.state != USB_SUSPENDED) || (dev_info.link_mode != LINK_USB && dev_info.rf_charge == 0x03))
 

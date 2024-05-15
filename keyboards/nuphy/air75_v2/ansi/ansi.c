@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 uint32_t        numlock_timer     = 0;
 uint32_t        caps_word_timer   = 0;
+bool            disable_lgui      = 0;
 
 /*
 typedef void    (*rgb_func_pointer)(void);
@@ -60,10 +61,14 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     }
 
     switch (keycode) {
+        case KC_LGUI:
+            if (disable_lgui) return false;
+            break;
+
         case SIDE_VAI:
         case SIDE_VAD:
         case SIDE_HUI:
-        case IND_TOGG:
+        case IND_TG:
             if (game_mode_enable) { break; }
             call_update_eeprom_data(&user_update);
             break;
@@ -149,6 +154,13 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 caps_word_timer = timer_read32();
             } else {
                 caps_word_timer = 0;
+            }
+            return false;
+
+        case LGUI_TG:
+            if (record->event.pressed) {
+                disable_lgui = !disable_lgui;
+                signal_rgb_led(!disable_lgui, LGUI_LED, LGUI_LED, 3000);
             }
             return false;
 
@@ -328,7 +340,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             } 
             return false;
 
-        case IND_TOGG:
+        case IND_TG:
             if (record->event.pressed) {
                 user_config.sys_ind++;
                 if (user_config.sys_ind == 3) { user_config.sys_ind = 0; }
