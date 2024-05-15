@@ -51,5 +51,6 @@ enum custom_keycodes {
     IND_TOGG,
     SLEEP_NOW,
     GAME_MODE,
-    CAPS_WORD
+    CAPS_WORD,
+    LGUI_TOGG
 };

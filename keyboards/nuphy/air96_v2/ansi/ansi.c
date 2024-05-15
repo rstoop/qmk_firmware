@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 uint32_t        numlock_timer = 0;
 uint32_t        caps_word_timer = 0;
+bool            disable_lgui = 0;
 
 /* qmk pre-process record */
 bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
@@ -51,6 +52,10 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     }
 
     switch (keycode) {
+        case KC_LGUI:
+            if (disable_lgui) return false;
+	    break;
+
         case SIDE_VAI:
         case SIDE_VAD:
         case SIDE_HUI:
@@ -322,6 +327,13 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 user_config.sys_ind++;
                 if (user_config.sys_ind == 3) { user_config.sys_ind = 0; }
+            }
+            return false;
+
+	case LGUI_TOGG:
+            if (record->event.pressed) {
+                disable_lgui = !disable_lgui;
+                signal_rgb_led(disable_lgui, WIN_LED, WIN_LED, 3000);
             }
             return false;
 
