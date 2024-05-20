@@ -69,11 +69,14 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case SIDE_SPD:
         case SIDE_1:
         case SLEEP_MODE:
-        case BAT_SHOW:
-        case SLEEP_NOW:
         case CAPS_WORD:
             if (game_mode_enable) { return true; }
             call_update_eeprom_data(&user_update);
+            break;
+
+        case BAT_SHOW:
+        case SLEEP_NOW:
+            if (game_mode_enable) { return true; }
             break;
 
         case RGB_VAI:

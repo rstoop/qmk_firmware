@@ -101,7 +101,7 @@ void uart_send_repeat_from_queue(void) {
         if (report_buff.length > 6) byte_report_buff = report_buff;
     }
 
-    if (report_buff.repeat < 8 ) {
+    if (report_buff.repeat < 16 ) {
         uart_send_report(report_buff.cmd, report_buff.buffer, report_buff.length);
         report_buff.repeat++;
     }

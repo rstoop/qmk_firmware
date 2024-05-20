@@ -455,6 +455,7 @@ void matrix_io_delay(void) {
 
 void led_power_handle(void) {
     static uint32_t interval = 0;
+    static uint8_t led_debounce = 4;
 
     if (timer_elapsed32(interval) < 500 || f_wakeup_prepare || game_mode_enable) // only check once in a while, less flickering for unhandled cases
         return;
@@ -463,7 +464,10 @@ void led_power_handle(void) {
 
     if ((rgb_matrix_is_enabled() && rgb_matrix_get_val() != 0) || !is_side_rgb_off() || rgb_required) { 
         rgb_required = 0;
+        led_debounce = 4;
         pwr_led_on();
+    } else if (led_debounce--) {
+        return;
     } else { // brightness is 0 or RGB off.
         pwr_led_off();
     }
