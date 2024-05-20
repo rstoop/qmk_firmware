@@ -100,7 +100,7 @@ void uart_send_repeat_from_queue(void) {
         clear_report_buffer_and_queue();
         if (report_buff.length > 6) byte_report_buff = report_buff;
     }
-    if (report_buff.repeat < 8) {
+    if (report_buff.repeat < 16) {
         uart_send_report(report_buff.cmd, report_buff.buffer, report_buff.length);
         report_buff.repeat++;
     }
@@ -460,6 +460,7 @@ void dev_sts_sync(void) {
  * @param Length data length
  */
 void uart_send_bytes(uint8_t *Buffer, uint32_t Length) {
+    Usart_Mgr.RXCmd = CMD_NULL;
     gpio_write_pin_low(NRF_WAKEUP_PIN);
     wait_us(50);
 

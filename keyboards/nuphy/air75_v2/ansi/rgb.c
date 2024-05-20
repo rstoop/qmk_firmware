@@ -160,6 +160,10 @@ void side_light_control(uint8_t bright) {
         if (user_config.ee_side_light > 0) user_config.ee_side_light--;
     }
     set_sys_light();
+#ifndef NO_DEBUG
+    dprintf("side matrix light_control [NOEEPROM]: %d\n", user_config.ee_side_light);
+#endif
+
 }
 
 /**
@@ -173,6 +177,9 @@ void side_speed_control(uint8_t fast) {
     } else {
         if (user_config.ee_side_speed < SIDE_SPEED_MAX) user_config.ee_side_speed++;
     }
+#ifndef NO_DEBUG
+    dprintf("side matrix speed_control [NOEEPROM]: %d\n", user_config.ee_side_speed);
+#endif
 }
 
 /**
@@ -199,6 +206,9 @@ void side_colour_control(uint8_t color) {
             user_config.ee_side_colour = game_mode_enable;
         }
     }
+#ifndef NO_DEBUG
+    dprintf("side matrix colour_control [NOEEPROM]: %d rgb: %d\n", user_config.ee_side_colour, user_config.ee_side_rgb);
+#endif
 }
 
 /**
@@ -215,6 +225,9 @@ void side_mode_control(uint8_t dir) {
         else user_config.ee_side_mode = SIDE_OFF;
     }
     side_play_point  = 0;
+#ifndef NO_DEBUG
+    dprintf("side matrix mode_control [NOEEPROM]: %d\n", user_config.ee_side_mode);
+#endif
 }
 
 /**
@@ -424,6 +437,9 @@ void side_one_control(uint8_t adjust)
             side_one_timer = 1;
         }
     }
+#ifndef NO_DEBUG
+    dprintf("side matrix side_control [NOEEPROM]: %d\n", user_config.ee_side_one);
+#endif
 }
 
 /**
@@ -593,7 +609,7 @@ void bat_led_show(void) {
     }
 
     if (charge_state != dev_info.rf_charge) {
-        if (timer_elapsed32(bat_sts_debounce) > 1000) {
+        if (timer_elapsed32(bat_sts_debounce) > 1500) {
             if ((charge_state & 0x01) == 0 && (dev_info.rf_charge & 0x01) != 0) {
                 bat_show_flag   = true;
                 bat_show_breath = true;
