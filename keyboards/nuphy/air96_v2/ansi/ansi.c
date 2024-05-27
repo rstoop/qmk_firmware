@@ -324,20 +324,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case IND_TG:
-            if (record->event.pressed) {
-                user_config.sys_ind++;
-                if (user_config.sys_ind == 3) { user_config.sys_ind = 0; }
-            }
-            return false;
-
-        case LGUI_TG:
-            if (record->event.pressed) {
-                disable_lgui = !disable_lgui;
-                signal_rgb_led(!disable_lgui, LGUI_LED, LGUI_LED, 3000);
-            }
-            return false;
-
         case BAT_SHOW:
             if (record->event.pressed) {
                 f_bat_hold = !f_bat_hold;
