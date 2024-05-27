@@ -611,7 +611,7 @@ void bat_led_show(void) {
     }
 
     if (charge_state != dev_info.rf_charge) {
-        if (timer_elapsed32(bat_sts_debounce) > 1500) {
+        if (timer_elapsed32(bat_sts_debounce) > 1000) {
             if ((charge_state & 0x01) == 0 && (dev_info.rf_charge & 0x01) != 0) {
                 bat_show_flag   = true;
                 bat_show_breath = true;
