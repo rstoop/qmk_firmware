@@ -48,9 +48,9 @@ enum custom_keycodes {
     BAT_NUM,
     RGB_TEST,
     NUMLOCK_INS,
-    IND_TG,
+    NUMLOCK_IND,
     SLEEP_NOW,
     GAME_MODE,
     CAPS_WORD,
-    LGUI_TG
+    WIN_LOCK
 };

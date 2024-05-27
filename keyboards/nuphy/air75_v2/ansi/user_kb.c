@@ -36,6 +36,9 @@ bool f_rf_sw_press      = 0;
 bool f_dev_reset_press  = 0;
 bool f_rgb_test_press   = 0;
 bool f_bat_num_show     = 0;
+bool f_caps_word_tg     = 0;
+bool f_numlock_press    = 0;
+
 
 uint8_t        rf_blink_cnt          = 0;
 uint8_t        rf_sw_temp            = 0;
@@ -46,14 +49,16 @@ uint32_t       no_act_time           = 0;
 uint16_t       dev_reset_press_delay = 0;
 uint16_t       rf_sw_press_delay     = 0;
 uint16_t       rgb_test_press_delay  = 0;
+uint16_t       caps_word_tg_delay    = 0;
+uint16_t       numlock_press_delay   = 0;
 uint32_t       sys_show_timer        = 0;
 uint32_t       sleep_show_timer      = 0;
 
 host_driver_t *m_host_driver         = 0;
 
-uint16_t       link_timeout          = (100 * 60 * 1);
-uint16_t       sleep_time_delay      = (100 * 60 * 2);
-uint32_t       deep_sleep_delay      = (100 * 60 * 6);
+uint16_t       link_timeout          = NO_ACT_TIME_MINUTE;
+uint16_t       sleep_time_delay      = NO_ACT_TIME_MINUTE * 2;
+uint32_t       deep_sleep_delay      = NO_ACT_TIME_MINUTE * 6;
 
 uint32_t       eeprom_update_timer   = 0;
 bool           user_update           = 0;
@@ -119,8 +124,6 @@ void custom_key_press(void) {
                 if (f_rf_new_adv_ok) break;
             }
         }
-    } else {
-        rf_sw_press_delay = 0;
     }
 
     // The device is restored to factory Settings
@@ -152,23 +155,41 @@ void custom_key_press(void) {
             device_reset_init();
             eeconfig_update_rgb_matrix_default();
 
-            if (dev_info.sys_sw_state == SYS_SW_MAC) {
-                default_layer_set(1 << 0);
-                keymap_config.nkro = 0;
-            } else {
-                default_layer_set(1 << 2);
-                keymap_config.nkro = 1;
-            }
+            dev_info.sys_sw_state = 0;
+            dial_sw_fast_scan();
+
+
         }
     } else {
         dev_reset_press_delay = 0;
     }
 
     // Trigger NumLock
-    if (numlock_timer != 0 && timer_elapsed32(numlock_timer) > TAPPING_TERM) {
-        tap_code(KC_NUM);
-        numlock_timer = 0;
+    if (f_numlock_press) {
+        numlock_press_delay++;
+        if (numlock_press_delay >= MICRO_PRESS_DELAY) {
+            tap_code(KC_NUM);
+            f_numlock_press = 0;
+        }
+    } else {
+        numlock_press_delay = 0;
     }
+
+    // Toggle Caps Word
+    if (f_caps_word_tg) {
+        caps_word_tg_delay++;
+        if (caps_word_tg_delay >= SMALL_PRESS_DELAY) {
+            user_config.caps_word_enable = !user_config.caps_word_enable;
+            f_caps_word_tg = 0;
+#ifndef NO_DEBUG
+            dprintf("caps_word_state: %s\n", user_config.caps_word_enable ? "ON" : "OFF");
+#endif
+            signal_rgb_led(user_config.caps_word_enable, CAPS_LED, CAPS_LED, CAPS_WORD_IDLE_TIMEOUT);
+        }
+    } else {
+        caps_word_tg_delay = 0;
+    }
+
 
     // Enter the RGB test mode
     if (f_rgb_test_press) {
@@ -181,14 +202,6 @@ void custom_key_press(void) {
         rgb_test_press_delay = 0;
     }
 
-    if (caps_word_timer != 0 && timer_elapsed32(caps_word_timer) > TAPPING_TERM * 4) {
-        user_config.caps_word_enable = !user_config.caps_word_enable;
-        caps_word_timer = 0;
-#ifndef NO_DEBUG
-        dprintf("caps_word_state: %s\n", user_config.caps_word_enable ? "ON" : "OFF");
-#endif
-	signal_rgb_led(user_config.caps_word_enable, CAPS_LED, CAPS_LED, CAPS_WORD_IDLE_TIMEOUT);
-    }
 }
 
 /**
@@ -405,6 +418,7 @@ void game_mode_tweak(void)
         user_config.ee_side_rgb    = 0;
         user_config.ee_side_light  = 2;
         user_config.ee_side_colour = SIDE_MATRIX_GAME_MODE;
+        if (user_config.numlock_state != 0) { user_config.numlock_state = 1; 
     } else {
         rgb_matrix_reload_from_eeprom();
         eeconfig_read_kb_datablock(&user_config);
@@ -416,7 +430,10 @@ void user_debug(void) {
     static uint32_t last_print = 0;
     if (no_act_time == 0 || no_act_time == last_print) return;
     if (no_act_time % 3000 == 0) {
-        if (!USB_ACTIVE && debug_enable) { debug_enable = false; }
+        if (!USB_ACTIVE && debug_enable) {
+            debug_enable = false;
+            print("DEBUG: disabled.\n");
+        }
         last_print = no_act_time;
         dprintf("no_act_time: %lds\n", no_act_time / 100);
     }
@@ -438,13 +455,14 @@ void user_config_reset(void) {
     user_config.ee_side_one             = 0;
     user_config.sleep_mode              = 1;
     user_config.caps_word_enable        = 1;
-    user_config.sys_ind                 = 2;
+    user_config.numlock_state           = 1;
+    keymap_config.no_gui                = 0;
     eeconfig_update_kb_datablock(&user_config);
 }
 
 void matrix_io_delay(void) {
     if (MATRIX_IO_DELAY == 0 || game_mode_enable == 1) {
-        __asm__ __volatile__("nop;nop;nop;\n\t" ::: "memory");
+        __asm__ __volatile__("nop;nop;nop;nop;nop;nop;\n\t" ::: "memory"); // sleep 0.3125 us (312.5 ns)
         return;
     }
 

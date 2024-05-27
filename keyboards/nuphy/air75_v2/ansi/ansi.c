@@ -20,10 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "usb_main.h"
 #include "mcu_pwr.h"
 
-uint32_t        numlock_timer     = 0;
-uint32_t        caps_word_timer   = 0;
-bool            disable_lgui      = 0;
-
 /*
 typedef void    (*rgb_func_pointer)(void);
 void            rgb_process_record_helper(const rgb_func_pointer rgb_func_noeeprom);
@@ -39,8 +35,7 @@ bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
     // wake up immediately
     if (f_wakeup_prepare) {
-        if (!f_rf_sleep) exit_light_sleep(false);
-        f_rf_sleep       = 0;
+        exit_light_sleep(false);
         f_wakeup_prepare = 0;
     }
 
@@ -61,14 +56,10 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     }
 
     switch (keycode) {
-        case KC_LGUI:
-            if (disable_lgui) return false;
-            break;
-
         case SIDE_VAI:
         case SIDE_VAD:
         case SIDE_HUI:
-        case IND_TG:
+        case NUMLOCK_IND:
             if (game_mode_enable) { break; }
             call_update_eeprom_data(&user_update);
             break;
@@ -79,13 +70,13 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case SIDE_1:
         case SLEEP_MODE:
         case CAPS_WORD:
-            if (game_mode_enable) { return true; }
+            if (game_mode_enable) { return false; }
             call_update_eeprom_data(&user_update);
             break;
 
         case BAT_SHOW:
         case SLEEP_NOW:
-            if (game_mode_enable) { return true; }
+            if (game_mode_enable) { return false; }
             break;
 
         case RGB_VAI:
@@ -128,11 +119,14 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     f_rf_sw_press = 1;
                     break_all_key();
                 }
-            } else if (f_rf_sw_press) {
-                if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
-                    set_link_mode();
-                    uart_send_cmd(CMD_SET_LINK, 10, 20);
+            } else {
+                if (f_rf_sw_press) {
+                    if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
+                        set_link_mode();
+                        uart_send_cmd(CMD_SET_LINK, 10, 20);
+                    }
                 }
+                rf_sw_press_delay = 0;
             }
             return false;
 
@@ -153,17 +147,13 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case CAPS_WORD:
-            if (record->event.pressed) {
-                caps_word_timer = timer_read32();
-            } else {
-                caps_word_timer = 0;
-            }
+            f_caps_word_tg = record->event.pressed;
             return false;
 
-        case LGUI_TG:
+        case WIN_LOCK:
             if (record->event.pressed) {
-                disable_lgui = !disable_lgui;
-                signal_rgb_led(!disable_lgui, LGUI_LED, LGUI_LED, 3000);
+                keymap_config.no_gui = !keymap_config.no_gui;
+                signal_rgb_led(!keymap_config.no_gui, WIN_LED, WIN_LED, 3000);
             }
             return false;
 
@@ -336,18 +326,11 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 user_config.sleep_mode++;
                 if (user_config.sleep_mode < 3) {
-                    link_timeout     = (100 * 60 * user_config.sleep_mode);
-                    sleep_time_delay = (100 * 60 * (4 * user_config.sleep_mode - 2));
+                    link_timeout     = (NO_ACT_TIME_MINUTE * user_config.sleep_mode);
+                    sleep_time_delay = (NO_ACT_TIME_MINUTE * (4 * user_config.sleep_mode - 2));
                 } else { user_config.sleep_mode = 0; }
                 sleep_show_timer = timer_read32();
             } 
-            return false;
-
-        case IND_TG:
-            if (record->event.pressed) {
-                user_config.sys_ind++;
-                if (user_config.sys_ind == 3) { user_config.sys_ind = 0; }
-            }
             return false;
 
         case BAT_SHOW:
@@ -367,16 +350,19 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case NUMLOCK_INS:
             if (record->event.pressed) {
                 if (get_mods() & MOD_MASK_CSA) {
-                    numlock_timer = 0;
                     tap_code(KC_INS);
-                } else {
-                    numlock_timer = timer_read32();
-                }
-            } else {
-                if (numlock_timer != 0 && timer_elapsed32(numlock_timer) < TAPPING_TERM) {
-                    numlock_timer = 0;
-                    tap_code(KC_INS);
-                }
+                    f_numlock_press = 0;
+                } else { f_numlock_press = 1; }
+            } else if (f_numlock_press) {
+                f_numlock_press = 0;
+                tap_code(KC_INS);
+            }
+            return false;
+
+        case NUMLOCK_IND:
+            if (record->event.pressed) {
+                if (user_config.numlock_state < 2 - game_mode_enable) { user_config.numlock_state++; }
+                else { user_config.numlock_state = 0; }
             }
             return false;
 
