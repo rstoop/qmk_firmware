@@ -710,10 +710,11 @@ void rgb_test_show(void) {
 }
 
 void signal_rgb_led(uint8_t state, uint8_t start_led, uint8_t end_led, uint16_t show_time) {
-    rgb_state     = state > 0 ? 1 : 0;
-    rgb_start_led = start_led;
-    rgb_end_led   = end_led;
-    rgb_show_time = show_time;
+    rgb_state           = state > 0 ? 1 : 0;
+    rgb_start_led       = start_led;
+    rgb_end_led         = end_led;
+    rgb_show_time       = show_time;
+    rgb_indicator_timer = 0;
 }
 
 void rgb_led_indicator(void) {

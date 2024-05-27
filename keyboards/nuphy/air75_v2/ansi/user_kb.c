@@ -114,7 +114,7 @@ void custom_key_press(void) {
     if (f_rf_sw_press) {
         rf_sw_press_delay++;
         
-        if (rf_sw_press_delay >= RF_LONG_PRESS_DELAY) {
+        if (rf_sw_press_delay >= MEDIUM_PRESS_DELAY) {
             set_link_mode();
             uint8_t timeout = 5;
             while (timeout--) {
@@ -129,7 +129,7 @@ void custom_key_press(void) {
     // The device is restored to factory Settings
     if (f_dev_reset_press) {
         dev_reset_press_delay++;
-        if (dev_reset_press_delay >= DEV_RESET_PRESS_DELAY) {
+        if (dev_reset_press_delay >= MEDIUM_PRESS_DELAY) {
             f_dev_reset_press = 0;
 
             if (dev_info.link_mode != LINK_RF_24) {
@@ -194,7 +194,7 @@ void custom_key_press(void) {
     // Enter the RGB test mode
     if (f_rgb_test_press) {
         rgb_test_press_delay++;
-        if (rgb_test_press_delay >= RGB_TEST_PRESS_DELAY) {
+        if (rgb_test_press_delay >= MEDIUM_PRESS_DELAY) {
             f_rgb_test_press = 0;
             rgb_test_show();
         }
@@ -418,7 +418,7 @@ void game_mode_tweak(void)
         user_config.ee_side_rgb    = 0;
         user_config.ee_side_light  = 2;
         user_config.ee_side_colour = SIDE_MATRIX_GAME_MODE;
-        if (user_config.numlock_state != 0) { user_config.numlock_state = 1; 
+        if (user_config.numlock_state != 0) { user_config.numlock_state = 1; }
     } else {
         rgb_matrix_reload_from_eeprom();
         eeconfig_read_kb_datablock(&user_config);
@@ -477,7 +477,7 @@ void matrix_io_delay(void) {
  *       from older Nuphy leaks.
  */
 void led_power_handle(void) {
-    static uint32_t interval = 0;
+    static uint32_t interval    = 0;
     static uint8_t led_debounce = 4;
 
     if (timer_elapsed32(interval) < 500 || f_wakeup_prepare || game_mode_enable) // only check once in a while, less flickering for unhandled cases

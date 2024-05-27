@@ -177,6 +177,8 @@ extern bool               f_rf_sw_press;
 extern bool               f_dev_reset_press;
 extern bool               f_bat_num_show;
 extern bool               f_rgb_test_press;
+extern bool               f_caps_word_tg;
+extern bool               f_numlock_press;
 
 extern uint8_t            rf_sw_temp;
 extern uint16_t           rf_sw_press_delay;
@@ -192,8 +194,6 @@ extern bool               f_wakeup_prepare;
 extern bool               f_goto_sleep;
 extern bool               f_goto_deepsleep;
 
-extern uint32_t           numlock_timer;
-extern uint32_t           caps_word_timer;
 extern uint32_t           eeprom_update_timer;
 extern bool               rgb_update;
 extern bool               user_update;

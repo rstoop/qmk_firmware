@@ -89,7 +89,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RGB_HUI:
         case RGB_SPI:
         case RGB_SPD:
-            if (game_mode_enable) { return true; }
+            if (game_mode_enable) { return false; }
             call_update_eeprom_data(&rgb_update);
             break;
         }
@@ -121,7 +121,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 }
             } else {
                 if (f_rf_sw_press) {
-                    if (rf_sw_press_delay < RF_LONG_PRESS_DELAY) {
+                    if (rf_sw_press_delay < MEDIUM_PRESS_DELAY) {
                         set_link_mode();
                         uart_send_cmd(CMD_SET_LINK, 10, 20);
                     }
