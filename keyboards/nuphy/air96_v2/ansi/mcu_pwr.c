@@ -211,6 +211,7 @@ void exit_deep_sleep(void) {
     // Matrix initialization
     extern void matrix_init_pins(void);
     matrix_init_pins();
+    matrix_scan();
 
     /* Wake RF module */
     gpio_set_pin_output(NRF_WAKEUP_PIN);
@@ -220,6 +221,11 @@ void exit_deep_sleep(void) {
     // Restore IO to working status
     gpio_set_pin_input_high(DEV_MODE_PIN); // PC0
     gpio_set_pin_input_high(SYS_MODE_PIN); // PC1
+
+    // Resume normal operations
+    no_act_time = 0;
+    f_rf_sleep = 0;
+    f_wakeup_prepare = 0;
 
     /* set RF module boot pin high */
     // gpio_set_pin_input_high(NRF_BOOT_PIN);

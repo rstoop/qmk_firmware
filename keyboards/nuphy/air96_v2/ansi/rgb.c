@@ -34,6 +34,7 @@ enum {
 uint8_t side_play_point       = 0;
 uint32_t side_one_timer       = 0;
 uint8_t sys_light             = 0;
+
 bool rgb_state                = 0;
 uint8_t rgb_start_led         = 0;
 uint8_t rgb_end_led           = 0;
@@ -284,12 +285,14 @@ void sys_led_show(void) {
     current_rgb.r = 0x00;
     uint8_t led_side = LEFT_SIDE;
 
-    if (host_keyboard_led_state().caps_lock && user_config.sys_ind > 0) {
+    if (host_keyboard_led_state().caps_lock) {
         led_side = RIGHT_SIDE;
         set_side_rgb(LEFT_SIDE + SYS_MARK, current_rgb.r, current_rgb.g, current_rgb.b);
     }
 
-    if (host_keyboard_led_state().num_lock && user_config.sys_ind > 1) {
+    if (user_config.numlock_state != 1) { return; }
+
+    if (host_keyboard_led_state().num_lock) {
         current_rgb.r = SIDE_BLINK_LIGHT;
         set_side_rgb(led_side + SYS_MARK, current_rgb.r, current_rgb.g, current_rgb.b);
     }
@@ -595,7 +598,7 @@ void bat_led_show(void)
     }
 
     if (charge_state != dev_info.rf_charge) {
-        if (timer_elapsed32(bat_sts_debounce) > 1500) {
+        if (timer_elapsed32(bat_sts_debounce) > 1000) {
             if ((charge_state & 0x01) == 0 && (dev_info.rf_charge & 0x01) != 0) {
                 bat_show_flag   = true;
                 bat_show_breath = true;
@@ -686,10 +689,11 @@ void rgb_test_show(void) {
 }
 
 void signal_rgb_led(uint8_t state, uint8_t start_led, uint8_t end_led, uint16_t show_time) {
-    rgb_state     = state > 0 ? 1 : 0;
-    rgb_start_led = start_led;
-    rgb_end_led   = end_led;
-    rgb_show_time = show_time;
+    rgb_state           = state > 0 ? 1 : 0;
+    rgb_start_led       = start_led;
+    rgb_end_led         = end_led;
+    rgb_show_time       = show_time;
+    rgb_indicator_timer = 0;
 }
 
 void rgb_led_indicator(void) {
@@ -722,6 +726,13 @@ void caps_word_show(void) {
     }
 }
 
+void numlock_rgb_show(void) {
+    if (user_config.numlock_state != 2) { return; }
+    if (host_keyboard_led_state().num_lock) {
+        rgb_required = 1;
+        rgb_matrix_set_color(NUMLOCK_LED, RGB_WHITE);
+    }
+}
 
 /**
  * @brief  side_led_show.
@@ -769,6 +780,7 @@ void realtime_led_process(void) {
     rf_led_show();
     rgb_led_indicator();
     caps_word_show();
+    numlock_rgb_show();
 }
 
 void led_show(void) {

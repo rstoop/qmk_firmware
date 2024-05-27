@@ -100,9 +100,15 @@ typedef enum {
 
 #define RF_POWER_DOWN_DELAY     (30)
 
-#define RF_LONG_PRESS_DELAY     30
-#define DEV_RESET_PRESS_DELAY   30
-#define RGB_TEST_PRESS_DELAY    30
+// #define RF_LONG_PRESS_DELAY     30
+// #define DEV_RESET_PRESS_DELAY   30
+// #define RGB_TEST_PRESS_DELAY    30
+#define MICRO_PRESS_DELAY       5
+#define SMALL_PRESS_DELAY       10
+#define MEDIUM_PRESS_DELAY      30
+#define LONG_PRESS_DELAY        50
+
+#define NO_ACT_TIME_MINUTE      (60 * 100)
 
 #define RGB_MATRIX_GAME_MODE                RGB_MATRIX_GRADIENT_LEFT_RIGHT
 #define RGB_MATRIX_GAME_MODE_VAL            RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2
@@ -110,7 +116,8 @@ typedef enum {
 
 #define    CAPS_LED            55
 #define    LSHIFT_LED          71
-#define    LGUI_LED            89
+#define    WIN_LED             89
+#define    NUMLOCK_LED         33
 
 #define USB_ACTIVE              ((dev_info.link_mode == LINK_USB && USB_DRIVER.state != USB_SUSPENDED) || (dev_info.link_mode != LINK_USB && dev_info.rf_charge == 0x03))
 
@@ -149,7 +156,7 @@ typedef struct
     uint8_t ee_side_one;
     uint8_t sleep_mode;
     uint8_t caps_word_enable;
-    uint8_t sys_ind;
+    uint8_t numlock_state;
     uint8_t retain1;
     uint8_t retain2;
 } user_config_t;
@@ -170,6 +177,8 @@ extern bool               f_rf_sw_press;
 extern bool               f_dev_reset_press;
 extern bool               f_bat_num_show;
 extern bool               f_rgb_test_press;
+extern bool               f_caps_word_tg;
+extern bool               f_numlock_press;
 
 extern uint8_t            rf_sw_temp;
 extern uint16_t           rf_sw_press_delay;

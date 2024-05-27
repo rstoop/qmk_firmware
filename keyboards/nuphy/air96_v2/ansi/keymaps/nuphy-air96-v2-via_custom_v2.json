@@ -225,9 +225,9 @@
 			"shortName": "Num_Ins"
 		},
 		{
-			"name": "Indicator\nToggle",
-			"title": "SysLed Ind Toggle",
-			"shortName": "Ind_Tg"
+			"name": "NumLock\nIndicator",
+			"title": "NumLock Indicator",
+			"shortName": "NumlockInd"
 		},
 		{
 			"name": "Sleep\nTrigger",
@@ -245,9 +245,9 @@
 			"shortName": "Caps_Word"
 		},
 		{
-			"name": "L_GUI\nTrigger",
-			"title": "Trigger LGUI",
-			"shortName": "Lgui_Tg"
+			"name": "Win_Lock\nTrigger",
+			"title": "Win Lock",
+			"shortName": "Win_Lock"
 		}
 	]
 }

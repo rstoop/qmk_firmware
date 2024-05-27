@@ -101,7 +101,7 @@ void uart_send_repeat_from_queue(void) {
         if (report_buff.length > 6) byte_report_buff = report_buff;
     }
 
-    if (report_buff.repeat < 16 ) {
+    if (report_buff.repeat < 16) {
         uart_send_report(report_buff.cmd, report_buff.buffer, report_buff.length);
         report_buff.repeat++;
     }
@@ -127,10 +127,11 @@ void uart_send_report_repeat(void) {
 
     if (no_act_time > 200) return;
 
-    uint8_t interval = get_repeat_interval();
+    uint8_t interval        = get_repeat_interval();
+    uint8_t max_repeat_time = dev_info.link_mode > LINK_RF_24 ? 16 : 75;
 
     if (timer_elapsed32(uart_rpt_timer) >= interval) {
-        if (no_act_time <= 75) { // increments every 10ms, 50 = 500ms
+        if (no_act_time <= max_repeat_time) { // increments every 10ms, 50 = 500ms
             if (byte_report_buff.cmd) {
                 uart_send_report(byte_report_buff.cmd, byte_report_buff.buffer, byte_report_buff.length);
                 byte_report_buff.repeat++;
@@ -196,6 +197,7 @@ void rf_protocol_receive(void) {
 
             case CMD_RF_STS_SYSC: {
                 static uint8_t error_cnt = 0;
+                static uint8_t bat_per_debounce = 0;
 
                 if (dev_info.link_mode == Usart_Mgr.RXDBuf[4]) {
                     error_cnt = 0;
@@ -207,7 +209,11 @@ void rf_protocol_receive(void) {
                     }
 
                     dev_info.rf_charge  = Usart_Mgr.RXDBuf[7];
-                    if (Usart_Mgr.RXDBuf[8] <= 100) dev_info.rf_battery = Usart_Mgr.RXDBuf[8];
+                    if (Usart_Mgr.RXDBuf[8] <= 100 && bat_per_debounce > 1) {
+                        dev_info.rf_battery = Usart_Mgr.RXDBuf[8];
+                        bat_per_debounce = 0;
+                    }
+                    bat_per_debounce++;
                     if (dev_info.rf_charge & 0x01) dev_info.rf_battery = 100;
                 } else {
                     if (dev_info.rf_state != RF_INVAILD) {
@@ -551,6 +557,11 @@ void uart_receive_pro(void) {
     rcv_timer = timer_read32();
 }
 
+void m_uart_gpio_set_low_speed(void) {
+    GPIOB->OSPEEDR &= ~(GPIO_OSPEEDER_OSPEEDR6 | GPIO_OSPEEDER_OSPEEDR7);
+    GPIOB->PUPDR |= (GPIO_PUPDR_PUPDR6_0 | GPIO_PUPDR_PUPDR7_0);
+}
+
 /**
  * @brief  RF uart initial.
  */
@@ -564,8 +575,7 @@ void rf_uart_init(void) {
     USART1->CR1 |= USART_CR1_UE;
 
     /* set Rx and Tx pin pull up */
-    GPIOB->OSPEEDR &= ~(GPIO_OSPEEDER_OSPEEDR6 | GPIO_OSPEEDER_OSPEEDR7);
-    GPIOB->PUPDR |= (GPIO_PUPDR_PUPDR6_0 | GPIO_PUPDR_PUPDR7_0);
+    m_uart_gpio_set_low_speed();
 }
 
 /**

@@ -29,7 +29,6 @@ void deep_sleep_handle(void) {
     enter_deep_sleep(); // puts the board in WFI mode and pauses the MCU
 #if (MCU_SLEEP_ENABLE)
     exit_deep_sleep();  // This gets called when there is an interrupt (wake) event.
-    no_act_time = 0;    // required to not cause an immediate sleep on first wake
 #endif
 }
 
