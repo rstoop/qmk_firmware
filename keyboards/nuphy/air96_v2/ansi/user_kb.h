@@ -195,8 +195,6 @@ extern bool               f_goto_sleep;
 extern bool               f_goto_deepsleep;
 
 
-extern uint32_t           numlock_timer;
-extern uint32_t           caps_word_timer;
 extern uint32_t           eeprom_update_timer;
 extern bool               rgb_update;
 extern bool               user_update;
