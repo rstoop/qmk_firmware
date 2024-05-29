@@ -86,11 +86,13 @@ void SYSCFG_EXTILineConfig(uint8_t EXTI_PortSourceGPIOx, uint8_t EXTI_PinSourcex
  */
 void enter_light_sleep(void) {
     uart_send_cmd(CMD_SET_CONFIG, 5, 5);
-    if ((dev_info.link_mode == LINK_RF_24 && f_rf_sleep) || dev_info.rf_state != RF_CONNECT)
+    if ((dev_info.link_mode == LINK_RF_24 && f_rf_sleep) || dev_info.rf_state != RF_CONNECT) {
         uart_send_cmd(CMD_SLEEP, 5, 5);
+    }
 
     led_pwr_sleep_handle();
-    clear_report_buffer_and_queue();
+    break_all_key();
+    // clear_report_buffer_and_queue();
 }
 
 /**
@@ -109,11 +111,11 @@ void enter_deep_sleep(void) {
         m_deinit_usb_072();
     }
 
-    for (uint8_t i = 0; i < ARRAY_SIZE(col_pins); ++i) {
+    for (uint8_t i = 0; i < MATRIX_COLS; ++i) {
         gpio_set_pin_output(col_pins[i]);
         gpio_write_pin_high(col_pins[i]);
     }
-    for (uint8_t i = 0; i < ARRAY_SIZE(row_pins); ++i) {
+    for (uint8_t i = 0; i < MATRIX_ROWS; ++i) {
         gpio_set_pin_input_low(row_pins[i]);
     }
     // Configure interrupt source - all 5 rows of the keyboard.
@@ -176,7 +178,7 @@ void exit_light_sleep(bool stm32_init) {
     led_pwr_wake_handle();
 #if (MCU_SLEEP_ENABLE)
     // Reinitialize the system clock
-    if (stm32_init) stm32_clock_init();
+    if (stm32_init) { stm32_clock_init(); }
 #endif
     // Handshake send to wake RF
     // uart_send_cmd(CMD_HAND, 0, 1);
@@ -196,10 +198,17 @@ void exit_light_sleep(bool stm32_init) {
  */
 void exit_deep_sleep(void) {
 
-    // Matrix initialization
+    // Matrix initialization & Scan
     extern void matrix_init_pins(void);
     matrix_init_pins();
+
     matrix_scan();
+    wait_us(50);
+    matrix_scan();
+    wait_ms(1);
+    matrix_scan();
+
+    // m_uart_gpio_set_low_speed();
  
     /* Wake RF module */
     gpio_set_pin_output(NRF_WAKEUP_PIN);
@@ -231,7 +240,7 @@ void led_pwr_wake_handle(void) {
 }
 
 void pwr_rgb_led_off(void) {
-    if (!rgb_led_on) return;
+    if (!rgb_led_on) { return; }
     // LED power supply off
     gpio_set_pin_output(DC_BOOST_PIN);
     gpio_write_pin_low(DC_BOOST_PIN);
@@ -244,7 +253,7 @@ void pwr_rgb_led_off(void) {
 }
 
 void pwr_rgb_led_on(void) {
-    if (rgb_led_on) return;
+    if (rgb_led_on) { return; }
     // LED power supply on
     gpio_set_pin_output(DC_BOOST_PIN);
     gpio_write_pin_high(DC_BOOST_PIN);
@@ -258,7 +267,7 @@ void pwr_rgb_led_on(void) {
 }
 
 void pwr_side_led_off(void) {
-    if (!side_led_on) return;
+    if (!side_led_on) { return; }
     gpio_set_pin_input(DRIVER_SIDE_CS_PIN);
     side_led_on = 0;
 #if !defined(NO_DEBUG)
@@ -267,7 +276,7 @@ void pwr_side_led_off(void) {
 }
 
 void pwr_side_led_on(void) {
-    if (side_led_on) return;
+    if (side_led_on) { return; }
     gpio_set_pin_output(DRIVER_SIDE_CS_PIN);
     gpio_write_pin_low(DRIVER_SIDE_CS_PIN);
     flush_side_leds = true;

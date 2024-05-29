@@ -105,7 +105,7 @@ void set_link_mode(void) {
 void custom_key_press(void) {
     static uint32_t long_press_timer = 0;
 
-    if (timer_elapsed32(long_press_timer) < 100) return;
+    if (timer_elapsed32(long_press_timer) < 100) { return; }
     long_press_timer = timer_read32();
 
     dial_sw_scan();
@@ -121,7 +121,7 @@ void custom_key_press(void) {
                 uart_send_cmd(CMD_NEW_ADV, 0, 1);
                 wait_ms(20);
                 uart_receive_pro();
-                if (f_rf_new_adv_ok) break;
+                if (f_rf_new_adv_ok) { break; }
             }
         }
     }
@@ -154,7 +154,6 @@ void custom_key_press(void) {
             device_reset_show();
             device_reset_init();
             eeconfig_update_rgb_matrix_default();
-
             dev_info.sys_sw_state = 0;
             dial_sw_fast_scan();
 
@@ -164,7 +163,18 @@ void custom_key_press(void) {
         dev_reset_press_delay = 0;
     }
 
-    // Trigger NumLock
+    // Enter the RGB test mode
+    if (f_rgb_test_press) {
+        rgb_test_press_delay++;
+        if (rgb_test_press_delay >= MEDIUM_PRESS_DELAY) {
+            f_rgb_test_press = 0;
+            rgb_test_show();
+        }
+    } else {
+        rgb_test_press_delay = 0;
+    }
+
+    // NumLock Press
     if (f_numlock_press) {
         numlock_press_delay++;
         if (numlock_press_delay >= MICRO_PRESS_DELAY) {
@@ -190,18 +200,6 @@ void custom_key_press(void) {
         caps_word_tg_delay = 0;
     }
 
-
-    // Enter the RGB test mode
-    if (f_rgb_test_press) {
-        rgb_test_press_delay++;
-        if (rgb_test_press_delay >= MEDIUM_PRESS_DELAY) {
-            f_rgb_test_press = 0;
-            rgb_test_show();
-        }
-    } else {
-        rgb_test_press_delay = 0;
-    }
-
 }
 
 /**
@@ -218,7 +216,7 @@ void break_all_key(void) {
  * @param mode : link mode
  */
 void switch_dev_link(uint8_t mode) {
-    if (mode > LINK_USB) return;
+    if (mode > LINK_USB) { return; }
     no_act_time = 0;
     break_all_key();
 
@@ -245,8 +243,8 @@ uint8_t dial_read(void) {
     gpio_set_pin_input_high(DEV_MODE_PIN);
     gpio_set_pin_input_high(SYS_MODE_PIN);
 
-    if (gpio_read_pin(DEV_MODE_PIN)) dial_scan |= 0X01;
-    if (gpio_read_pin(SYS_MODE_PIN)) dial_scan |= 0X02;
+    if (gpio_read_pin(DEV_MODE_PIN)) { dial_scan |= 0X01; }
+    if (gpio_read_pin(SYS_MODE_PIN)) { dial_scan |= 0X02; }
 
     return dial_scan;
 }
@@ -270,14 +268,14 @@ void dial_set(uint8_t dial_scan, bool led_sys_show) {
 
     if (dial_scan & 0x02) {
         if (dev_info.sys_sw_state != SYS_SW_MAC) {
-            if (led_sys_show) sys_show_timer = timer_read32();
+            if (led_sys_show) { sys_show_timer = timer_read32(); }
             default_layer_set(1 << 0);
             dev_info.sys_sw_state = SYS_SW_MAC;
             keymap_config.nkro    = 0;
         }
     } else {
         if (dev_info.sys_sw_state != SYS_SW_WIN) {
-            if (led_sys_show) sys_show_timer = timer_read32();
+            if (led_sys_show) { sys_show_timer = timer_read32(); }
             default_layer_set(1 << 2);
             dev_info.sys_sw_state = SYS_SW_WIN;
             keymap_config.nkro    = 1;
@@ -290,9 +288,8 @@ void dial_set(uint8_t dial_scan, bool led_sys_show) {
  */
 void dial_sw_scan(void) {
     uint8_t         dial_scan       = 0;
-    static uint8_t  debounce        = 0;
     static uint8_t  dial_save       = 0xf0;
-
+    static uint8_t  debounce        = 0;
     dial_scan       = dial_read();
 
     if (dial_save != dial_scan) {
@@ -358,14 +355,14 @@ void timer_pro(void) {
     }
 
     // step 10ms
-    if (timer_elapsed32(interval_timer) < 10) return;
+    if (timer_elapsed32(interval_timer) < 10) { return; }
     interval_timer = timer_read32();
 
-    if (rf_link_show_time < RF_LINK_SHOW_TIME) rf_link_show_time++;
+    if (rf_link_show_time < RF_LINK_SHOW_TIME) { rf_link_show_time++; }
 
-    if (no_act_time < 0xffffffff) no_act_time++;
+    if (no_act_time < 0xffffffff) { no_act_time++; }
 
-    if (rf_linking_time < 0xffff) rf_linking_time++;
+    if (rf_linking_time < 0xffff) { rf_linking_time++; }
 
 }
 
@@ -374,7 +371,7 @@ void timer_pro(void) {
  */
 void load_eeprom_data(void) {
     eeconfig_read_kb_datablock(&user_config);
-    if (user_config.init_layer < 100) user_config_reset();
+    if (user_config.init_layer < 100) { user_config_reset(); }
 }
 
 void call_update_eeprom_data(bool* eeprom_update_init) {
@@ -387,10 +384,10 @@ void call_update_eeprom_data(bool* eeprom_update_init) {
  */
 void delay_update_eeprom_data(void) {
     if (eeprom_update_timer == 0) {
-        if (user_update || rgb_update) eeprom_update_timer = timer_read32();
+        if (user_update || rgb_update) { eeprom_update_timer = timer_read32(); }
         return;
     }
-    if (timer_elapsed32(eeprom_update_timer) < (1000 * 30)) return;
+    if (timer_elapsed32(eeprom_update_timer) < (1000 * 30)) { return; }
     if (user_update) {
 #ifndef NO_DEBUG
         dprint("Updating EEPROM: user_config\n");
@@ -428,7 +425,7 @@ void game_mode_tweak(void)
 #ifndef NO_DEBUG
 void user_debug(void) {
     static uint32_t last_print = 0;
-    if (no_act_time == 0 || no_act_time == last_print) return;
+    if (no_act_time == 0 || no_act_time == last_print) { return; }
     if (no_act_time % 3000 == 0) {
         if (!USB_ACTIVE && debug_enable) {
             debug_enable = false;
@@ -466,8 +463,8 @@ void matrix_io_delay(void) {
         return;
     }
 
-    if (no_act_time > 3000) wait_us(1200);
-    else if (no_act_time > 1000) wait_us(200);
+    if (no_act_time > 3000)      { wait_us(1200); }
+    else if (no_act_time > 1000) {  wait_us(200); }
     wait_us(MATRIX_IO_DELAY);
 }
 
@@ -480,8 +477,9 @@ void led_power_handle(void) {
     static uint32_t interval    = 0;
     static uint8_t led_debounce = 4;
 
-    if (timer_elapsed32(interval) < 500 || f_wakeup_prepare || game_mode_enable) // only check once in a while, less flickering for unhandled cases
+    if (timer_elapsed32(interval) < 500 || f_wakeup_prepare || game_mode_enable) { // only check once in a while, less flickering for unhandled cases
         return;
+    }
 
     interval = timer_read32();
 

@@ -98,7 +98,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case RF_DFU:
             if (record->event.pressed) {
-                if (dev_info.link_mode != LINK_USB) return false;
+                if (dev_info.link_mode != LINK_USB) { return false; }
                 uart_send_cmd(CMD_RF_DFU, 10, 20);
             }
             return false;
@@ -159,7 +159,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case KC_LSFT:
             if (!record->event.pressed) {
-                if ((!user_config.caps_word_enable || game_mode_enable) && is_caps_word_on()) caps_word_off();
+                if ((!user_config.caps_word_enable || game_mode_enable) && is_caps_word_on()) { caps_word_off(); }
             }
             return true;
 
