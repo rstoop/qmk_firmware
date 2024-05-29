@@ -88,7 +88,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case RF_DFU:
             if (record->event.pressed) {
-                if (dev_info.link_mode != LINK_USB) return false;
+                if (dev_info.link_mode != LINK_USB) { return false; }
                 uart_send_cmd(CMD_RF_DFU, 10, 20);
             }
             return false;
@@ -141,7 +141,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case KC_LSFT:
             if (!record->event.pressed) {
-                if ((!user_config.caps_word_enable || game_mode_enable) && is_caps_word_on()) caps_word_off();
+                if ((!user_config.caps_word_enable || game_mode_enable) && is_caps_word_on()) { caps_word_off(); }
             }
             return true;
 
@@ -319,7 +319,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 if (user_config.sleep_mode < 3) {
                     link_timeout     = (NO_ACT_TIME_MINUTE * user_config.sleep_mode);
                     sleep_time_delay = (NO_ACT_TIME_MINUTE * (4 * user_config.sleep_mode - 2));
-                } else user_config.sleep_mode = 0;
+                } else { user_config.sleep_mode = 0; }
                 sleep_show_timer = timer_read32();
             }
             return false;
@@ -363,7 +363,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 wait_ms(TAP_CODE_DELAY);
             } else {
-                if (user_config.sleep_mode == 0) return true;
+                if (user_config.sleep_mode == 0) { return true; }
                 else {
                     f_goto_sleep = 1;
                     f_goto_deepsleep  = 1;

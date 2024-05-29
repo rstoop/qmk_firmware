@@ -40,17 +40,18 @@ void sleep_handle(void) {
     static uint8_t  usb_suspend_debounce = 0;
     static uint32_t rf_disconnect_time = 0;
 
-    if (user_config.sleep_mode == 0 || USB_ACTIVE) return;
-    if (timer_elapsed32(delay_step_timer) > (60 * 1000)) no_act_time = 0;
+    if (user_config.sleep_mode == 0 || USB_ACTIVE) { return; }
+    if (timer_elapsed32(delay_step_timer) > (60 * 1000)) { no_act_time = 0; }
 
     /* 500ms interval */
-    if (timer_elapsed32(delay_step_timer) < 500) return;
+    if (timer_elapsed32(delay_step_timer) < 500) { return; }
         delay_step_timer = timer_read32();
 
-    if (user_config.sleep_mode != 1 || f_rf_sleep)
+    if (user_config.sleep_mode != 1 || f_rf_sleep) {
         f_goto_deepsleep = 0;
-    else if (no_act_time >= deep_sleep_delay)
+    } else if (no_act_time >= deep_sleep_delay) {
         f_goto_deepsleep = 1;
+    }
 
     if (f_goto_deepsleep != 0) {
         f_goto_deepsleep   = 0;
@@ -69,8 +70,10 @@ void sleep_handle(void) {
     }
 
     // sleep check
-    if (f_goto_sleep || f_wakeup_prepare)
+    if (f_goto_sleep || f_wakeup_prepare) {
         return;
+    }
+
     if (dev_info.link_mode == LINK_USB) {
         if (USB_DRIVER.state == USB_SUSPENDED) {
             usb_suspend_debounce++;

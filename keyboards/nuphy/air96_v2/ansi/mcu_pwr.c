@@ -89,8 +89,9 @@ void SYSCFG_EXTILineConfig(uint8_t EXTI_PortSourceGPIOx, uint8_t EXTI_PinSourcex
  */
 void enter_light_sleep(void) {
     uart_send_cmd(CMD_SET_CONFIG, 5, 5);
-    if ((dev_info.link_mode == LINK_RF_24 && f_rf_sleep) || dev_info.rf_state != RF_CONNECT)
+    if ((dev_info.link_mode == LINK_RF_24 && f_rf_sleep) || dev_info.rf_state != RF_CONNECT) {
         uart_send_cmd(CMD_SLEEP, 5, 5);
+    }
 
     led_pwr_sleep_handle();
     clear_report_buffer_and_queue();
@@ -187,7 +188,7 @@ void exit_light_sleep(bool stm32_init) {
 
 #if (MCU_SLEEP_ENABLE)
     // Reinitialize the system clock
-    if (stm32_init) stm32_clock_init();
+    if (stm32_init) { stm32_clock_init(); }
 #endif
     // Handshake send to wake RF
     // uart_send_cmd(CMD_HAND, 0, 1);
@@ -250,7 +251,7 @@ void led_pwr_wake_handle(void) {
 }
 
 void pwr_led_off(void) {
-    if (!rgb_led_on) return;
+    if (!rgb_led_on) { return; }
     // LED power supply off
     gpio_set_pin_output(DC_BOOST_PIN);
     gpio_write_pin_low(DC_BOOST_PIN);
@@ -263,7 +264,7 @@ void pwr_led_off(void) {
 }
 
 void pwr_led_on(void) {
-    if (rgb_led_on) return;
+    if (rgb_led_on) { return; }
     // LED power supply on
     gpio_set_pin_output(DC_BOOST_PIN);
     gpio_write_pin_high(DC_BOOST_PIN);
