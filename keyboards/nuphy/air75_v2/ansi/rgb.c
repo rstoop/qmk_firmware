@@ -545,9 +545,9 @@ void bat_num_led(void)
 
     if (bat_percent % 10 == 0) { bat_pct--; }
 
-    for(uint8_t i=0; i < bat_pct; i++)
+    for(uint8_t i=0; i < bat_pct; i++) {
         rgb_matrix_set_color(29 - i, r, g, b);
-
+    }
 
     // set percent
     if (bat_percent % 10 == 0) {

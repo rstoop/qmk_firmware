@@ -162,9 +162,9 @@ void rf_protocol_receive(void) {
             Usart_Mgr.RXDState = RX_DATA_ERR;
             return;
         } else if (Usart_Mgr.RXDLen > 4) {
-            for (i = 0; i < RX_LEN; i++)
+            for (i = 0; i < RX_LEN; i++) {
                 check_sum += Usart_Mgr.RXDBuf[4 + i];
-
+            }
             if (check_sum != Usart_Mgr.RXDBuf[4 + i]) {
                 Usart_Mgr.RXDState = RX_SUM_ERR;
                 return;
@@ -488,8 +488,9 @@ uint8_t get_checksum(uint8_t *buf, uint8_t len) {
     uint8_t i;
     uint8_t checksum = 0;
 
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; i++) {
         checksum += *buf++;
+    }
 
     checksum ^= UART_HEAD;
 
