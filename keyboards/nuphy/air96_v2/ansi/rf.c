@@ -68,7 +68,7 @@ static uint8_t get_repeat_interval(void) {
 
     if (interval < 10) { return 20; }
     return 50;
-    
+
 }
 
 /**
@@ -115,7 +115,7 @@ void uart_send_report_repeat(void) {
     if (dev_info.link_mode == LINK_USB) { return; }
 
     if (dev_info.rf_state != RF_CONNECT) {
-        if (no_act_time > 500) { clear_report_buffer_and_queue(); }
+        if (no_act_time > 600) { clear_report_buffer_and_queue(); }
         return;
     }
 
@@ -141,7 +141,6 @@ void uart_send_report_repeat(void) {
             if (bit_report_buff.cmd) {
                 uart_send_report(bit_report_buff.cmd, bit_report_buff.buffer, bit_report_buff.length);
                 bit_report_buff.repeat++;
-
             }
 
         } else {
@@ -451,7 +450,7 @@ void dev_sts_sync(void) {
     */
     if (f_wakeup_prepare && f_rf_sleep) { return; }
     uart_send_cmd(CMD_RF_STS_SYSC, 1, 1);
-    uart_rpt_timer = timer_read32();
+    // uart_rpt_timer = timer_read32();
 
     if (dev_info.link_mode != LINK_USB) {
         if (++sync_lost >= 5) {

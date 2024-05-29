@@ -212,10 +212,12 @@ void exit_light_sleep(bool stm32_init) {
 void exit_deep_sleep(void) {
  
     // Matrix initialization & Scan
-    matrix_scan();
+    // matrix_scan();
     extern void matrix_init_pins(void);
     matrix_init_pins();
 
+    matrix_scan();
+    wait_us(50);
     matrix_scan();
     wait_ms(1);
     matrix_scan();
