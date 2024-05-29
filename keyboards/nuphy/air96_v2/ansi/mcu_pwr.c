@@ -94,7 +94,8 @@ void enter_light_sleep(void) {
     }
 
     led_pwr_sleep_handle();
-    clear_report_buffer_and_queue();
+    break_all_key();
+    // clear_report_buffer_and_queue();
 }
 
 /**
@@ -118,11 +119,11 @@ void enter_deep_sleep(void) {
 
     //------------------------ Configure WakeUp Key
 
-    for (uint8_t i = 0; i < ARRAY_SIZE(col_pins); ++i) {
+    for (uint8_t i = 0; i < MATRIX_COLS; ++i) {
         gpio_set_pin_output(col_pins[i]);
         gpio_write_pin_high(col_pins[i]);
     }
-    for (uint8_t i = 0; i < ARRAY_SIZE(row_pins); ++i) {
+    for (uint8_t i = 0; i < MATRIX_ROWS; ++i) {
         gpio_set_pin_input_low(row_pins[i]);
     }
 
@@ -166,13 +167,14 @@ void enter_deep_sleep(void) {
     gpio_set_pin_output(A12);
     gpio_write_pin_low(A12);
 
-// removed because we want to skip the RF module sleep for now
-/*
+    // removed because we want to skip the RF module sleep for now
+    /*
     gpio_set_pin_input_high(NRF_BOOT_PIN);
 
     gpio_set_pin_output(NRF_WAKEUP_PIN);
     gpio_write_pin_high(NRF_WAKEUP_PIN);
-*/
+   */
+
     // Enter low power mode and wait for interrupt signal
     PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
 #endif
@@ -209,15 +211,23 @@ void exit_light_sleep(bool stm32_init) {
  */
 void exit_deep_sleep(void) {
  
-    // Matrix initialization
+    // Matrix initialization & Scan
+    matrix_scan();
     extern void matrix_init_pins(void);
     matrix_init_pins();
+
     matrix_scan();
+    wait_ms(1);
+    matrix_scan();
+
+    // m_uart_gpio_set_low_speed();
+
+    /* set RF module boot pin high */
+    // gpio_set_pin_input_high(NRF_BOOT_PIN);
 
     /* Wake RF module */
     gpio_set_pin_output(NRF_WAKEUP_PIN);
     gpio_write_pin_high(NRF_WAKEUP_PIN);
-
 
     // Restore IO to working status
     gpio_set_pin_input_high(DEV_MODE_PIN); // PC0
@@ -227,13 +237,6 @@ void exit_deep_sleep(void) {
     no_act_time = 0;
     f_rf_sleep = 0;
     f_wakeup_prepare = 0;
-
-    /* set RF module boot pin high */
-    // gpio_set_pin_input_high(NRF_BOOT_PIN);
-
-    /* Wake RF module */
-    // gpio_set_pin_output(NRF_WAKEUP_PIN);
-    // gpio_write_pin_high(NRF_WAKEUP_PIN);
 
     // flag for RF wakeup workload.
     dev_info.rf_state = RF_DISCONNECT;

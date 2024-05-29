@@ -162,6 +162,7 @@ void side_colour_control(uint8_t color) {
     } else {
         if (color) { user_config.ee_side_colour++; }
         else { user_config.ee_side_colour--; }
+
         if (user_config.ee_side_colour >= SIDE_COLOUR_MAX) {
             user_config.ee_side_rgb    = 1;
             user_config.ee_side_colour = game_mode_enable;

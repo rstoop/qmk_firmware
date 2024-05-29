@@ -76,7 +76,7 @@ static uint8_t get_repeat_interval(void) {
  */
 void clear_report_buffer(void) {
     if (byte_report_buff.cmd) { memset(&byte_report_buff.cmd, 0, sizeof(report_buffer_t)); }
-    if (bit_report_buff.cmd)  { memset(&bit_report_buff.cmd, 0, sizeof(report_buffer_t)); }
+    if (bit_report_buff.cmd)  { memset(&bit_report_buff.cmd, 0, sizeof(report_buffer_t));  }
 }
 
 void clear_report_buffer_and_queue(void) {
@@ -115,7 +115,7 @@ void uart_send_report_repeat(void) {
     if (dev_info.link_mode == LINK_USB) { return; }
 
     if (dev_info.rf_state != RF_CONNECT) {
-        if (no_act_time > 600) { clear_report_buffer_and_queue(); }
+        if (no_act_time > 500) { clear_report_buffer_and_queue(); }
         return;
     }
 
@@ -209,7 +209,7 @@ void rf_protocol_receive(void) {
                     }
 
                     dev_info.rf_charge  = Usart_Mgr.RXDBuf[7];
-                    if (Usart_Mgr.RXDBuf[8] <= 100 && bat_per_debounce > 1) {
+                    if (Usart_Mgr.RXDBuf[8] <= 100 && bat_per_debounce > 4) {
                         dev_info.rf_battery = Usart_Mgr.RXDBuf[8];
                         bat_per_debounce = 0;
                     }
@@ -396,7 +396,7 @@ void dev_sts_sync(void) {
     static uint32_t interval_timer  = 0;
     static uint8_t  link_state_temp = RF_DISCONNECT;
 
-    if (timer_elapsed32(interval_timer) < 500) { return; }
+    if (timer_elapsed32(interval_timer) < 200) { return; }
     interval_timer = timer_read32();
 
     if (f_rf_reset) {
@@ -426,7 +426,7 @@ void dev_sts_sync(void) {
         }
 
         if (dev_info.rf_state != RF_CONNECT) {
-            if (disconnect_delay >= 6) {
+            if (disconnect_delay >= 15) {
                 rf_blink_cnt      = 3;
                 rf_link_show_time = 0;
                 link_state_temp   = dev_info.rf_state;
@@ -454,7 +454,7 @@ void dev_sts_sync(void) {
     uart_rpt_timer = timer_read32();
 
     if (dev_info.link_mode != LINK_USB) {
-        if (++sync_lost >= 3) {
+        if (++sync_lost >= 5) {
             sync_lost  = 0;
             f_rf_reset = 1;
         }

@@ -192,6 +192,7 @@ void custom_key_press(void) {
     else {
         caps_word_tg_delay = 0;
     }
+
 }
 
 /**
@@ -423,6 +424,7 @@ void user_debug(void) {
             debug_enable = false;
             print("DEBUG: disabled.\n");
         }
+
         last_print = no_act_time;
         dprintf("no_act_time: %lds\n", no_act_time / 100);
     }
