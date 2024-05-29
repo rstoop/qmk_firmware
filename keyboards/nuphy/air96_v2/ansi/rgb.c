@@ -532,8 +532,9 @@ void bat_num_led(void) {
 
     if (bat_percent % 10 == 0) { bat_pct--; }
 
-    for(uint8_t i=0; i < bat_pct; i++)
+    for(uint8_t i=0; i < bat_pct; i++) {
         rgb_matrix_set_color(20 + i, r, g, b);
+    }
     // set percent
 
     if (bat_percent % 10 == 0) {
@@ -575,9 +576,9 @@ void bat_percent_led(void)
     }
 
     set_side_rgb(RIGHT_SIDE + SYS_MARK, current_rgb.r, current_rgb.g, current_rgb.b);
-    for (uint8_t i = bat_end_led + 1; i < SIDE_LINE; i++)
+    for (uint8_t i = bat_end_led + 1; i < SIDE_LINE; i++) {
         rgb_matrix_set_color(SIDE_INDEX + 9 - i, RGB_OFF);
-
+    }
 }
 
 /**

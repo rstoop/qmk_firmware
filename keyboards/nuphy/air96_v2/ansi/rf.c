@@ -163,9 +163,9 @@ void rf_protocol_receive(void) {
             Usart_Mgr.RXDState = RX_DATA_ERR;
             return;
         } else if (Usart_Mgr.RXDLen > 4) {
-            for (i = 0; i < RX_LEN; i++)
+            for (i = 0; i < RX_LEN; i++) {
                 check_sum += Usart_Mgr.RXDBuf[4 + i];
-
+            }
             if (check_sum != Usart_Mgr.RXDBuf[4 + i]) {
                 Usart_Mgr.RXDState = RX_SUM_ERR;
                 return;
