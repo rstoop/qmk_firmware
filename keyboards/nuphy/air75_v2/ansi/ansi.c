@@ -368,9 +368,9 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case SLEEP_NOW:
             if (record->event.pressed) { 
-                wait_ms(TAP_CODE_DELAY);
+                wait_ms(100);
             } else {
-                if (user_config.sleep_mode == 0) return true;
+                if (user_config.sleep_mode == 0) { return true; }
                 else {
                     f_goto_sleep = 1;
                     f_goto_deepsleep  = 1;

@@ -204,10 +204,6 @@ void exit_deep_sleep(void) {
     matrix_init_pins();
 
     matrix_scan();
-    wait_us(50);
-    matrix_scan();
-    wait_ms(1);
-    matrix_scan();
 
     // m_uart_gpio_set_low_speed();
  
