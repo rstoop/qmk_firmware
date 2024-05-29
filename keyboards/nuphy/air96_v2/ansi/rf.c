@@ -128,7 +128,7 @@ void uart_send_report_repeat(void) {
     if (no_act_time > 200) { return; }
 
     uint8_t interval        = get_repeat_interval();
-    uint8_t max_repeat_time = dev_info.link_mode > LINK_RF_24 ? 16 : 75;
+    uint8_t max_repeat_time = 75;
 
     if (timer_elapsed32(uart_rpt_timer) >= interval) {
         if (no_act_time <= max_repeat_time) { // increments every 10ms, 50 = 500ms
@@ -450,7 +450,7 @@ void dev_sts_sync(void) {
     */
     if (f_wakeup_prepare && f_rf_sleep) { return; }
     uart_send_cmd(CMD_RF_STS_SYSC, 1, 1);
-    // uart_rpt_timer = timer_read32();
+    uart_rpt_timer = timer_read32();
 
     if (dev_info.link_mode != LINK_USB) {
         if (++sync_lost >= 5) {
