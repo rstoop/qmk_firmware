@@ -199,6 +199,7 @@ void exit_light_sleep(bool stm32_init) {
 void exit_deep_sleep(void) {
 
     // Matrix initialization & Scan
+    matrix_scan();
     extern void matrix_init_pins(void);
     matrix_init_pins();
 
