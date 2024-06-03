@@ -210,15 +210,23 @@ void exit_light_sleep(bool stm32_init) {
  *       This is mostly Nuphy's unreleased logic with cleanup/refactoring by me.
  */
 void exit_deep_sleep(void) {
- 
+
     // Matrix initialization & Scan
     matrix_scan();
-    extern void matrix_init_pins(void);
-    matrix_init_pins();
+    // extern void matrix_init_pins(void);
+    // matrix_init_pins();
+    extern void matrix_init_custom(void);
+    matrix_init_custom();
 
+    matrix_scan();
+    wait_ms(1);
     matrix_scan();
 
     // m_uart_gpio_set_low_speed();
+
+    // Restore IO to working status
+    gpio_set_pin_input_high(DEV_MODE_PIN); // PC0
+    gpio_set_pin_input_high(SYS_MODE_PIN); // PC1
 
     /* set RF module boot pin high */
     // gpio_set_pin_input_high(NRF_BOOT_PIN);
@@ -227,24 +235,20 @@ void exit_deep_sleep(void) {
     gpio_set_pin_output(NRF_WAKEUP_PIN);
     gpio_write_pin_high(NRF_WAKEUP_PIN);
 
-    // Restore IO to working status
-    gpio_set_pin_input_high(DEV_MODE_PIN); // PC0
-    gpio_set_pin_input_high(SYS_MODE_PIN); // PC1
+    // Flag for RF state.
+    rf_disconnect_delay = 0xff;
+    dev_info.rf_state = RF_DISCONNECT;
 
     // Resume normal operations
     no_act_time = 0;
     f_rf_sleep = 0;
     f_wakeup_prepare = 0;
 
-    // flag for RF wakeup workload.
-    dev_info.rf_state = RF_DISCONNECT;
-
     exit_light_sleep(true);
 }
 
 void led_pwr_sleep_handle(void) {
     pwr_led_off();
-
 }
 
 void led_pwr_wake_handle(void) {
