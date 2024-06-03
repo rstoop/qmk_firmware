@@ -38,10 +38,10 @@ bool f_goto_deepsleep  = 0;
 bool f_wakeup_prepare  = 0;
 bool f_rf_sleep        = 0;
 
-uint8_t  func_tab[32]     = {0};
-uint8_t  sync_lost        = 0;
-uint8_t  disconnect_delay = 0;
-uint32_t uart_rpt_timer   = 0;
+uint8_t  func_tab[32]           = {0};
+uint8_t  sync_lost              = 0;
+uint8_t  rf_disconnect_delay    = 0;
+uint32_t uart_rpt_timer         = 0;
 
 report_buffer_t byte_report_buff = {0};
 report_buffer_t bit_report_buff  = {0};
@@ -90,7 +90,9 @@ void uart_send_repeat_from_queue(void) {
     static uint32_t        dequeue_timer = 0;
     static report_buffer_t report_buff   = {0};
 
-    if (timer_elapsed32(dequeue_timer) > 10 && !rf_queue.is_empty()) {
+    uint8_t dequeue_interval = report_buff.repeat == 0 ? 50 : 10;
+
+    if (timer_elapsed32(dequeue_timer) > dequeue_interval && !rf_queue.is_empty()) {
         rf_queue.dequeue(&report_buff);
         dequeue_timer = timer_read32();
     }
@@ -100,7 +102,7 @@ void uart_send_repeat_from_queue(void) {
         clear_report_buffer_and_queue();
         if (report_buff.length > 6) { byte_report_buff = report_buff; }
     }
-    if (report_buff.repeat < 16) {
+    if (report_buff.repeat < 24) {
         uart_send_report(report_buff.cmd, report_buff.buffer, report_buff.length);
         report_buff.repeat++;
     }
@@ -128,10 +130,9 @@ void uart_send_report_repeat(void) {
     if (no_act_time > 200) { return; }
 
     uint8_t interval = get_repeat_interval();
-    uint8_t max_repeat_time = 75;
 
     if (timer_elapsed32(uart_rpt_timer) >= interval) {
-        if (no_act_time <= max_repeat_time) { // increments every 10ms, 40 = 400ms
+        if (no_act_time <= 75) { // increments every 10ms, 40 = 400ms
             if (byte_report_buff.cmd) {
                 uart_send_report(byte_report_buff.cmd, byte_report_buff.buffer, byte_report_buff.length);
                 byte_report_buff.repeat++;
@@ -184,7 +185,7 @@ void rf_protocol_receive(void) {
             }
 
             case CMD_24G_SUSPEND: {
-                f_goto_sleep = 1;
+                if (!USB_ACTIVE) { f_goto_sleep = 1; }
                 break;
             }
 
@@ -298,8 +299,8 @@ uint8_t uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms) {
             Usart_Mgr.TXDBuf[4] = dev_info.link_mode;
             Usart_Mgr.TXDBuf[5] = dev_info.link_mode;
 
-            rf_linking_time  = 0;
-            disconnect_delay = 0xff;
+            rf_linking_time     = 0;
+            rf_disconnect_delay = 0xff;
             break;
         }
 
@@ -310,9 +311,9 @@ uint8_t uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms) {
             Usart_Mgr.TXDBuf[5] = 1;
             Usart_Mgr.TXDBuf[6] = dev_info.link_mode + 1;
 
-            rf_linking_time  = 0;
-            disconnect_delay = 0xff;
-            f_rf_new_adv_ok  = 0;
+            rf_linking_time     = 0;
+            rf_disconnect_delay = 0xff;
+            f_rf_new_adv_ok     = 0;
             break;
         }
 
@@ -425,17 +426,17 @@ void dev_sts_sync(void) {
         }
 
         if (dev_info.rf_state != RF_CONNECT) {
-            if (disconnect_delay >= 15) {
+            if (rf_disconnect_delay >= 15) {
                 rf_blink_cnt      = 3;
                 rf_link_show_time = 0;
                 link_state_temp   = dev_info.rf_state;
             } else {
-                disconnect_delay++;
+                rf_disconnect_delay++;
             }
         } else if (dev_info.rf_state == RF_CONNECT) {
-            rf_linking_time  = 0;
-            disconnect_delay = 0;
-            rf_blink_cnt     = 0;
+            rf_linking_time     = 0;
+            rf_disconnect_delay = 0;
+            rf_blink_cnt        = 0;
 
             if (link_state_temp != RF_CONNECT) {
                 link_state_temp   = RF_CONNECT;

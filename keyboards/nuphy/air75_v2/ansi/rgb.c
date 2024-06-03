@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ansi.h"
 #include "rgb_table.h"
 #include "ws2812.h"
-#include "usb_main.h"
 #include "mcu_pwr.h"
 
 /* side rgb mode */
@@ -249,7 +248,7 @@ void sys_sw_led_show(void) {
         } else {
             set_side_rgb(RIGHT_SIDE, RGB_OFF);
         }       
-        if (timer_elapsed32(sys_show_timer) >= 3000) {
+        if (timer_elapsed32(sys_show_timer) >= 2900) {
             sys_show_timer = 0;
         }
     }
@@ -279,7 +278,7 @@ void sleep_sw_led_show(void) {
         } else {
             set_side_rgb(RIGHT_SIDE, RGB_OFF);
         }
-        if (timer_elapsed32(sleep_show_timer) >= 3000) {
+        if (timer_elapsed32(sleep_show_timer) >= 2900) {
             sleep_show_timer = 0;
         }
     }
@@ -812,8 +811,8 @@ void realtime_led_process(void) {
 
 void led_show(void) {
     if (f_wakeup_prepare) { return; }
+    side_rgb_refresh();
     normal_led_process();
     realtime_led_process();
-    side_rgb_refresh();
 }
 

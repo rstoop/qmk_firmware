@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "quantum.h"
+#include "usb_main.h"
 
 typedef enum {
     RX_Idle,
@@ -168,6 +169,7 @@ extern user_config_t      user_config;
 
 extern uint8_t            rf_blink_cnt;
 extern uint16_t           rf_link_show_time;
+extern uint8_t            rf_disconnect_delay;
 
 extern bool               f_bat_hold;
 extern bool               game_mode_enable;

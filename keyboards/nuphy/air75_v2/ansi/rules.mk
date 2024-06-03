@@ -1,2 +1,11 @@
-SRC += mcu_pwr.c rgb.c rf.c sleep.c rf_driver.c user_kb.c side_driver.c rf_queue.c
+SRC += user_kb.c
+SRC += rf.c
+SRC += rgb.c side_driver.c
+
+SRC += mcu_pwr.c sleep.c rf_driver.c rf_queue.c
+
 UART_DRIVER_REQUIRED = yes
+
+CUSTOM_MATRIX = lite
+SRC += matrix.c
+

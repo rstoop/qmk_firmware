@@ -200,28 +200,33 @@ void exit_deep_sleep(void) {
 
     // Matrix initialization & Scan
     matrix_scan();
-    extern void matrix_init_pins(void);
-    matrix_init_pins();
+    // extern void matrix_init_pins(void);
+    // matrix_init_pins();
+    extern void matrix_init_custom(void);
+    matrix_init_custom();
 
+    matrix_scan();
+    wait_ms(1);
     matrix_scan();
 
     // m_uart_gpio_set_low_speed();
- 
-    /* Wake RF module */
-    gpio_set_pin_output(NRF_WAKEUP_PIN);
-    gpio_write_pin_high(NRF_WAKEUP_PIN);
 
     // Restore IO to working status
     gpio_set_pin_input_high(DEV_MODE_PIN); // PC0
     gpio_set_pin_input_high(SYS_MODE_PIN); // PC1
 
+    /* Wake RF module */
+    gpio_set_pin_output(NRF_WAKEUP_PIN);
+    gpio_write_pin_high(NRF_WAKEUP_PIN);
+
+    // Flag for RF state.
+    rf_disconnect_delay = 0xff;
+    dev_info.rf_state = RF_DISCONNECT;
+
     // Resume normal operations
     no_act_time = 0;
     f_rf_sleep = 0;
     f_wakeup_prepare = 0;
-
-    // flag for RF wakeup workload.
-    dev_info.rf_state = RF_DISCONNECT;
 
     exit_light_sleep(true);
 }
