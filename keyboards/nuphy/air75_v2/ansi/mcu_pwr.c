@@ -25,7 +25,8 @@ static bool f_usb_deinit = 0;
 static bool rgb_led_on   = 0;
 static bool side_led_on  = 0;
 
-void clear_report_buffer_and_queue(void);
+// void clear_report_buffer_and_queue(void);
+// void clear_report_buffer();
 
 #if (MCU_SLEEP_ENABLE)
 
@@ -217,10 +218,13 @@ void exit_deep_sleep(void) {
     gpio_write_pin_high(NRF_WAKEUP_PIN);
 
     // Flag for RF state.
-    rf_disconnect_delay = 0xff;
-    dev_info.rf_state = RF_DISCONNECT;
+    break_all_key();
+    dev_info.rf_state = RF_LINKING;
+    // dev_info.rf_state = RF_DISCONNECT;
+    rf_disconnect_delay = 10;
+    rf_linking_time     = 0;
 
-    wait_us(200);
+    // wait_us(1);
 
     // Resume normal operations
     no_act_time = 0;
