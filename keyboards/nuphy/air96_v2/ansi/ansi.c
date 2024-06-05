@@ -359,6 +359,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case SLEEP_NOW:
+            if (my_awake_limit != 255) { return false; }
             if (record->event.pressed) {
                 wait_ms(100);
             } else {
