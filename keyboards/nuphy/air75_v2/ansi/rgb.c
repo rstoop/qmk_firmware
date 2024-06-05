@@ -32,8 +32,8 @@ enum {
 
 bool     flush_side_leds      = 0;
 uint8_t  side_play_point      = 0;
+uint8_t  sys_light            = 3;
 uint32_t side_one_timer       = 0;
-uint8_t  sys_light            = 0;
 bool     rgb_state            = 0;
 uint8_t  rgb_start_led        = 0;
 uint8_t  rgb_end_led          = 0;
@@ -128,10 +128,11 @@ void set_side_rgb(uint8_t side, uint8_t r, uint8_t g, uint8_t b) {
  * @brief  refresh side leds.
  */
 void side_rgb_refresh(void) {
-    if (!is_side_rgb_off() || user_config.ee_side_light > 0) {
+    if (!is_side_rgb_off() || (user_config.ee_side_light > 0 && user_config.ee_side_mode != SIDE_OFF) {
         pwr_side_led_on(); // power on side LED before refresh
     }
-    if (!flush_side_leds) { return; } 
+    if (!flush_side_leds) { return; }
+    set_sys_light();
     side_ws2812_setleds(side_leds, SIDE_LED_NUM);
     flush_side_leds = false;
 }
@@ -158,7 +159,7 @@ void side_light_control(uint8_t bright) {
     } else {
         if (user_config.ee_side_light > 0) { user_config.ee_side_light--; }
     }
-    set_sys_light();
+    // set_sys_light();
 #ifndef NO_DEBUG
     dprintf("side matrix light_control [NOEEPROM]: %d\n", user_config.ee_side_light);
 #endif
@@ -772,7 +773,6 @@ void normal_led_process(void) {
 
     if (timer_elapsed32(side_update_time) < update_interval) { return; }
     side_update_time = timer_read32();
-    if (!sys_light) { set_sys_light(); }
 
     switch (user_config.ee_side_mode) {
         case SIDE_WAVE:

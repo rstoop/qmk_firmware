@@ -90,9 +90,7 @@ void uart_send_repeat_from_queue(void) {
     static uint32_t        dequeue_timer = 0;
     static report_buffer_t report_buff   = {0};
 
-    uint8_t dequeue_interval = report_buff.repeat == 0 ? 50 : 10;
-
-    if (timer_elapsed32(dequeue_timer) > dequeue_interval && !rf_queue.is_empty()) {
+    if (timer_elapsed32(dequeue_timer) > 10 && !rf_queue.is_empty()) {
         rf_queue.dequeue(&report_buff);
         dequeue_timer = timer_read32();
     }

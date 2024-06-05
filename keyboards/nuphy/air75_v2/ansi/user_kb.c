@@ -457,7 +457,11 @@ void user_config_reset(void) {
 }
 
 void matrix_io_delay(void) {
+#if (MCU_SLEEP_ENABLE)
+    if (MATRIX_IO_DELAY == 0 || game_mode_enable == 1 || f_rf_sleep) {
+#else
     if (MATRIX_IO_DELAY == 0 || game_mode_enable == 1) {
+#endif
         __asm__ __volatile__("nop;nop;nop;nop;nop;nop;\n\t" ::: "memory"); // sleep 0.3125 us (312.5 ns)
         return;
     }
@@ -476,16 +480,14 @@ void led_power_handle(void) {
     static uint32_t interval    = 0;
     static uint8_t led_debounce = 4;
 
-    if (timer_elapsed32(interval) < 500 || f_wakeup_prepare || game_mode_enable) { // only check once in a while, less flickering for unhandled cases
+    if ((timer_elapsed32(interval) < 500 || f_wakeup_prepare || game_mode_enable) && !rgb_required) { // only check once in a while, less flickering for unhandled cases
         return;
     }
-
-    interval = timer_read32();
 
     if ((rgb_matrix_is_enabled() && rgb_matrix_get_val() != 0) || rgb_required) {
         pwr_rgb_led_on();
         rgb_required = 0;
-    } else { // brightness is 0 or RGB off.
+    } else if (timer_elapsed32(interval) > 500) { // brightness is 0 or RGB off.
         pwr_rgb_led_off();
     }
 
@@ -493,8 +495,12 @@ void led_power_handle(void) {
         pwr_side_led_on();
         led_debounce = 4;
     } else if (led_debounce--) {
+        interval = timer_read32();
         return;
-    } else {
+    } else if (timer_elapsed32(interval) > 500) {
         pwr_side_led_off();
     }
+
+    interval = timer_read32();
+
 }
