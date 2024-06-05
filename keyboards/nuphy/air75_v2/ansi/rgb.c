@@ -128,7 +128,7 @@ void set_side_rgb(uint8_t side, uint8_t r, uint8_t g, uint8_t b) {
  * @brief  refresh side leds.
  */
 void side_rgb_refresh(void) {
-    if (!is_side_rgb_off() || (user_config.ee_side_light > 0 && user_config.ee_side_mode != SIDE_OFF) {
+    if (!is_side_rgb_off() || (user_config.ee_side_light > 0 && user_config.ee_side_mode != SIDE_OFF)) {
         pwr_side_led_on(); // power on side LED before refresh
     }
     if (!flush_side_leds) { return; }
