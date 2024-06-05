@@ -435,7 +435,7 @@ void housekeeping_task_kb(void) {
     user_debug();
 #endif
 
-if (game_mode_enable) { return; }
+    if (game_mode_enable) { return; }
 
     delay_update_eeprom_data();
 

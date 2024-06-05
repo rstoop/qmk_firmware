@@ -212,14 +212,11 @@ void exit_light_sleep(bool stm32_init) {
 void exit_deep_sleep(void) {
 
     // Matrix initialization & Scan
-    matrix_scan();
     // extern void matrix_init_pins(void);
     // matrix_init_pins();
     extern void matrix_init_custom(void);
     matrix_init_custom();
 
-    matrix_scan();
-    wait_ms(1);
     matrix_scan();
 
     // m_uart_gpio_set_low_speed();
@@ -238,6 +235,8 @@ void exit_deep_sleep(void) {
     // Flag for RF state.
     rf_disconnect_delay = 0xff;
     dev_info.rf_state = RF_DISCONNECT;
+
+    wait_us(200);
 
     // Resume normal operations
     no_act_time = 0;
