@@ -26,7 +26,7 @@ static bool rgb_led_on   = 0;
 static bool side_led_on  = 0;
 
 // void clear_report_buffer_and_queue(void);
-// void clear_report_buffer();
+// void clear_report_buffer(void);
 
 #if (MCU_SLEEP_ENABLE)
 
